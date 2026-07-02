@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Astrameath design tokens — dark RPG / apocalyptic sci-fi.
+   Mood: Hollow Knight pale-glow-on-void, Dark Souls restraint, WuWa sci-fi edges.
+   This is the Phase-1 foundation; the full theming pass happens in Phase 7. */
+:root {
+  --bg: #06080f; /* void */
+  --panel: #0c101b; /* raised surface */
+  --panel-2: #121828; /* hover / inset surface */
+  --edge: #1f2940; /* hairline borders */
+  --fg: #c8d3e8; /* pale silver-blue */
+  --muted: #66738f;
+  --accent: #7fd4e4; /* pale soul-glow cyan */
+  --gold: #c9a86a; /* reward / title gold */
+  --danger: #d4735f;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-edge: var(--edge);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-gold: var(--gold);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* iOS zoom guard: inputs never below 16px on small screens (V1 lesson) */
+input,
+select,
+textarea {
+  font-size: 1rem;
+}
+@media (min-width: 900px) {
+  input,
+  select,
+  textarea {
+    font-size: 0.875rem;
+  }
+}
