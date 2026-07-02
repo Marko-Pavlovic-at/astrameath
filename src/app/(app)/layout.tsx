@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Nav from "@/components/nav";
+import TimerBar from "@/components/timer-bar";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -20,6 +21,7 @@ export default async function AppLayout({
     <div className="min-h-dvh md:flex">
       <Nav />
       <main className="flex-1 p-4 pb-24 md:p-8 md:pb-8">{children}</main>
+      <TimerBar />
     </div>
   );
 }

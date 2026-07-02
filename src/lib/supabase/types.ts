@@ -529,7 +529,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      project_time_totals: {
+        Row: {
+          project_id: string | null
+          total_seconds: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      task_time_totals: {
+        Row: {
+          task_id: string | null
+          total_seconds: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
