@@ -61,12 +61,19 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
   are always computed at read time. XP is stored only as raw `xp_events` rows.
 - Inputs stay ≥16px font below 900px (iOS zoom guard, see globals.css).
 
-## Status (2026-07-02)
+## Status (2026-07-03)
 
 - Phase 1 (foundation: schema, auth, shell, deploy) — done, verified.
 - Phase 2 (projects, tasks, timer, time tracking) — done, verified by Marko.
-- Phase 3 next: recurring tasks + per-day completions (`task_completions`),
-  calendar month/week/day, undated-task sidebar with drag-and-drop.
-- Then: 4 gamification (+ goals/milestones UI), 5 stats, 6 AI companions,
-  7 game-UI polish. Post-MVP: Public Prep (Stripe, AI quotas, open signup),
-  community, module system. Details in the plan doc.
+- Phase 3 (recurrence + calendar) — done, verified end-to-end in browser.
+  Recurrence lives in `src/lib/recurrence.ts` (daily / weekly-days / monthly-day,
+  anchored at scheduled_date or creation date; occurrences derived, never stored).
+  Calendar month/week/day in `src/components/calendar/`; undated sidebar with
+  HTML5 drag-and-drop + date-input fallback. Local dates via `src/lib/dates.ts`
+  ("YYYY-MM-DD" strings, never toISOString). Recurring task checkboxes toggle
+  `task_completions` for today (optimistic).
+- Phase 4 next: gamification — XP ledger wired to time/completions/milestones,
+  stat + general levels, reward catalog, profile page (+ goals/milestones UI).
+- Then: 5 stats, 6 AI companions, 7 game-UI polish. Post-MVP: Public Prep
+  (Stripe, AI quotas, open signup), community, module system. Details in the
+  plan doc.

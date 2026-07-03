@@ -55,8 +55,11 @@ export function useCreateTask(projectId: string) {
       if (error) throw error;
       return data;
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["undated-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar-tasks"] });
+    },
   });
 }
 
@@ -71,8 +74,11 @@ export function useUpdateTask(projectId: string) {
       const { error } = await supabase.from("tasks").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["undated-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar-tasks"] });
+    },
   });
 }
 
@@ -89,6 +95,9 @@ export function useDeleteTask(projectId: string) {
       queryClient.invalidateQueries({ queryKey: ["task-time"] });
       queryClient.invalidateQueries({ queryKey: ["project-time"] });
       queryClient.invalidateQueries({ queryKey: ["active-session"] });
+      queryClient.invalidateQueries({ queryKey: ["undated-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["completions"] });
     },
   });
 }

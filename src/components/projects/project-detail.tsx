@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import TaskRow from "@/components/projects/task-row";
+import { todayStr } from "@/lib/dates";
+import { useCompletions } from "@/lib/queries/calendar";
 import {
   useDeleteProject,
   useProject,
@@ -41,6 +43,8 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
   const { data: taskTime } = useTaskTimeTotals();
   const { data: projectTime } = useProjectTimeTotals();
   const { data: activeSession } = useActiveSession();
+  const today = todayStr();
+  const { data: todayCompletions } = useCompletions(today, today);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const createTask = useCreateTask(projectId);
@@ -278,6 +282,9 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
               projectId={projectId}
               totalSeconds={taskTime?.[t.id] ?? 0}
               isTimerActive={activeSession?.task_id === t.id}
+              completedToday={
+                todayCompletions?.some((c) => c.task_id === t.id) ?? false
+              }
             />
           ))}
         </ul>
