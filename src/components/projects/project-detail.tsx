@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import GoalsSection from "@/components/projects/goals-section";
 import TaskRow from "@/components/projects/task-row";
 import { todayStr } from "@/lib/dates";
 import { useCompletions } from "@/lib/queries/calendar";
@@ -205,6 +206,8 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
           </button>
         </div>
       )}
+
+      <GoalsSection projectId={projectId} />
 
       <form onSubmit={addTask} className="mt-6 flex flex-wrap gap-2">
         <input

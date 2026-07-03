@@ -123,8 +123,10 @@ export function useToggleCompletion() {
       for (const [key, data] of ctx?.snapshots ?? [])
         queryClient.setQueryData(key, data);
     },
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ["completions"] }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["completions"] });
+      queryClient.invalidateQueries({ queryKey: ["xp"] });
+    },
   });
 }
 
@@ -202,6 +204,7 @@ export function useSetTaskDone() {
       queryClient.invalidateQueries({ queryKey: ["calendar-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["undated-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["xp"] });
     },
   });
 }

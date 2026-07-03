@@ -545,6 +545,14 @@ export type Database = {
         }
         Relationships: []
       }
+      xp_totals: {
+        Row: {
+          stat: Database["public"]["Enums"]["stat_kind"] | null
+          total_xp: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

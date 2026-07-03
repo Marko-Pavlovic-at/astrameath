@@ -75,8 +75,20 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
   HTML5 drag-and-drop + date-input fallback. Local dates via `src/lib/dates.ts`
   ("YYYY-MM-DD" strings, never toISOString). Recurring task checkboxes toggle
   `task_completions` for today (optimistic).
-- Phase 4 next: gamification — XP ledger wired to time/completions/milestones,
-  stat + general levels, reward catalog, profile page (+ goals/milestones UI).
-- Then: 5 stats, 6 AI companions, 7 game-UI polish. Post-MVP: Public Prep
+- Phase 4 (gamification) — done, verified end-to-end in browser. XP is awarded
+  and revoked by **DB triggers** (`supabase/migrations/20260703_xp_triggers.sql`):
+  1 XP/min tracked, 10 task completion (one-off or per-day), 25 milestone,
+  50 goal; every award carries ref_id so un-doing revokes exactly. `xp_totals`
+  view aggregates; hard-deleting a project revokes its XP, archiving keeps it.
+  Levels derive in `src/lib/xp.ts` (level-up cost 100 + 50/level; general level
+  = Σ stat levels − 5). Reward catalog in `src/lib/rewards.ts` (titles/items/
+  themes by general level; `unlocks` table intentionally unused for now — all
+  rewards are level-derived). Profile page: name edit, active title, stat cards,
+  reward grids; themes swap `--accent` via `<html data-theme>` (ThemeApplier in
+  the app layout, palette overrides in globals.css). Goals + milestones UI in
+  project detail (`goals-section.tsx`).
+- Phase 5 next: stats page — time distribution, frequency, avg/day,
+  this week/month.
+- Then: 6 AI companions, 7 game-UI polish. Post-MVP: Public Prep
   (Stripe, AI quotas, open signup), community, module system. Details in the
   plan doc.

@@ -29,6 +29,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Unlockable accent themes (catalog in src/lib/rewards.ts, chosen on Profile).
+   Keys land on <html data-theme="...">; "abyss" is the :root default above. */
+html[data-theme="ember"] {
+  --accent: #e4a37f;
+}
+html[data-theme="verdant"] {
+  --accent: #8fd49a;
+}
+html[data-theme="aurum"] {
+  --accent: #e4c97f;
+}
+html[data-theme="rosequartz"] {
+  --accent: #e49fc0;
+}
+
 body {
   background: var(--bg);
   color: var(--fg);

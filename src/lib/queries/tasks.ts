@@ -78,6 +78,7 @@ export function useUpdateTask(projectId: string) {
       queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
       queryClient.invalidateQueries({ queryKey: ["undated-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["calendar-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["xp"] });
     },
   });
 }
@@ -98,6 +99,7 @@ export function useDeleteTask(projectId: string) {
       queryClient.invalidateQueries({ queryKey: ["undated-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["calendar-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["completions"] });
+      queryClient.invalidateQueries({ queryKey: ["xp"] });
     },
   });
 }
