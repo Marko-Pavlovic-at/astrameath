@@ -65,7 +65,10 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
 
 - Phase 1 (foundation: schema, auth, shell, deploy) — done, verified.
 - Phase 2 (projects, tasks, timer, time tracking) — done, verified by Marko.
-- Phase 3 (recurrence + calendar) — done, verified end-to-end in browser.
+- Phase 3 (recurrence + calendar) — done, verified end-to-end in browser,
+  reviewed by Marko (incl. drag-and-drop on real mouse). Follow-ups shipped:
+  calendar view/date in URL search params (browser back retraces month→day),
+  ← Month button, start/stop timer on day-view rows.
   Recurrence lives in `src/lib/recurrence.ts` (daily / weekly-days / monthly-day,
   anchored at scheduled_date or creation date; occurrences derived, never stored).
   Calendar month/week/day in `src/components/calendar/`; undated sidebar with
