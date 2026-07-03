@@ -13,9 +13,13 @@ export const XP_RATES = {
   goal: 50,
 } as const;
 
-/** XP needed to go from `level` to `level + 1` — linear growth, quadratic total. */
+/**
+ * XP needed to go from `level` to `level + 1` — linear growth, quadratic total.
+ * Tuned (2026-07-03) so the balanced path to general level 100 costs ≈ 88,900 XP
+ * ≈ one year of 4 tracked hours/day (240 XP/day) spread across the six stats.
+ */
 export function levelUpCost(level: number): number {
-  return 100 + (level - 1) * 50;
+  return 200 + (level - 1) * 90;
 }
 
 export type LevelInfo = {

@@ -49,27 +49,6 @@ export default function Nav() {
             Astrameath
           </span>
         </div>
-        {summary && (
-          <Link
-            href="/profile"
-            className="mx-3 mb-3 flex items-center gap-3 rounded border border-edge bg-panel-2 px-3 py-2 transition-colors hover:border-accent/40"
-          >
-            <span className="flex size-9 shrink-0 flex-col items-center justify-center rounded-full border border-accent/50">
-              <span className="text-[7px] uppercase tracking-widest text-muted">
-                Lv
-              </span>
-              <span className="text-sm leading-none text-accent">
-                {summary.level}
-              </span>
-            </span>
-            <span className="min-w-0 text-xs text-muted">
-              <span className="block truncate text-fg">
-                {summary.totalXp.toLocaleString()} XP
-              </span>
-              lifetime
-            </span>
-          </Link>
-        )}
         <nav className="flex-1 space-y-1 px-3">
           {items.map((item) => {
             const active = pathname.startsWith(item.href);
@@ -89,6 +68,27 @@ export default function Nav() {
             );
           })}
         </nav>
+        {summary && (
+          <Link
+            href="/profile"
+            className="mx-3 mb-2 flex items-center gap-4 rounded-lg border border-edge bg-panel-2 px-4 py-3 transition-colors hover:border-accent/40"
+          >
+            <span className="flex size-14 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50">
+              <span className="text-[9px] uppercase tracking-widest text-muted">
+                Lv
+              </span>
+              <span className="text-xl leading-none text-accent">
+                {summary.level}
+              </span>
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-base text-fg">
+                {summary.totalXp.toLocaleString()} XP
+              </span>
+              <span className="text-xs text-muted">lifetime</span>
+            </span>
+          </Link>
+        )}
         <button
           onClick={signOut}
           className="mx-3 mb-4 rounded px-3 py-2 text-left text-sm text-muted transition-colors hover:bg-panel-2 hover:text-fg"
