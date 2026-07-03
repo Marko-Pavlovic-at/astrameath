@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import DangerZone from "@/components/profile/danger-zone";
 import { useProfile, useUpdateProfile } from "@/lib/queries/profile";
 import { useXpTotals } from "@/lib/queries/xp";
 import {
@@ -204,6 +205,8 @@ export default function ProfileView() {
           </ul>
         </div>
       ))}
+
+      <DangerZone />
     </section>
   );
 }

@@ -100,7 +100,33 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
   sessions.ts TIME_KEYS so timer mutations refresh it. Charts are single-hue
   (accent) by design — the six stat colors fail CVD checks as a categorical
   palette; identity lives in row labels + stat glyphs.
-- Phase 6 next: AI companions.
-- Then: 7 game-UI polish. Post-MVP: Public Prep
+- Phase 6 (AI companions) — done, verified end-to-end in browser against the
+  real Claude API (create with avatar upload → chat → state deltas → memory
+  compression → recall → both resets). Architecture carried from V1: one
+  streamed Haiku inference per turn (`/api/ai/chat`, Node route handler,
+  cookie-auth via the Supabase server client) — in-character text + an
+  `update_state` tool call in the same response. GOTCHA (V1 lesson, kept):
+  `tool_choice` must stay `auto`; forcing `{type:"tool"}` makes Anthropic skip
+  the text reply. System prompt = cached stable prefix (persona) + dynamic
+  tail (temporal, relationship-as-language, mood, app snapshot, recent
+  events, memories); snapshot is built **server-side** from the DB
+  (`src/lib/ai/snapshot.ts`), client only sends tzOffsetMinutes. Personas are
+  user-authored joyland-style templates (tagline/personality/greeting/
+  scenario/example dialogs, `{{char}}`/`{{user}}` placeholders) in
+  `companions.persona`. Relationship axes: affection/trust/respect/amusement/
+  annoyance, 0–100, archetype derived; absence decay on load. Chat memory =
+  `companion_messages` rows; past ~80 messages the client fires
+  `/api/ai/memorize`, which compresses the oldest chunk into
+  `companion_memories` (structured output) and **deletes** those rows. Costs:
+  `ai_usage` row per call; UI shows session/companion/lifetime USD in the
+  chat "Bond" panel. Reset buttons (app data / AI data) live on Profile.
+  Lib in `src/lib/ai/` (persona, state, prompt, tools, pricing, snapshot —
+  all pure except snapshot), UI in `src/components/companions/`.
+  NOTE: `ANTHROPIC_API_KEY` is set on all three Vercel envs + `.env.local`
+  (V1's Vercel copy is `sensitive`-type and unreadable; the working key came
+  from V1's local `.env.local`). Verify a pulled env value is non-empty —
+  `vercel env pull` writes empty values for sensitive vars without erroring.
+- Phase 7 next: game-UI polish (theming pass, animations, PWA install,
+  responsive audit). Post-MVP: Public Prep
   (Stripe, AI quotas, open signup), community, module system. Details in the
   plan doc.

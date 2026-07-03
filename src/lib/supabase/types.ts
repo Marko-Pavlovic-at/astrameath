@@ -128,6 +128,7 @@ export type Database = {
           last_seen_at: string | null
           mood: string | null
           mood_reason: string | null
+          recent_events: Json
           relationship: Json
           updated_at: string
           user_id: string
@@ -137,6 +138,7 @@ export type Database = {
           last_seen_at?: string | null
           mood?: string | null
           mood_reason?: string | null
+          recent_events?: Json
           relationship?: Json
           updated_at?: string
           user_id?: string
@@ -146,6 +148,7 @@ export type Database = {
           last_seen_at?: string | null
           mood?: string | null
           mood_reason?: string | null
+          recent_events?: Json
           relationship?: Json
           updated_at?: string
           user_id?: string
