@@ -1,6 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import {
+  useActiveSession,
+  useStartTimer,
+  useStopTimer,
+} from "@/lib/queries/sessions";
 import type { Occurrence } from "@/lib/recurrence";
 import { PRIORITIES } from "@/lib/stats";
 
@@ -18,6 +23,21 @@ export default function DayView({
   onDropTask: (date: string, taskId: string) => void;
 }) {
   const [over, setOver] = useState(false);
+  const { data: activeSession } = useActiveSession();
+  const startTimer = useStartTimer();
+  const stopTimer = useStopTimer();
+
+  async function toggleTimer(taskId: string) {
+    if (activeSession?.task_id === taskId) {
+      const outcome = await stopTimer.mutateAsync();
+      if (outcome === "discarded") {
+        alert("Timer ran past 12 hours — session discarded.");
+      }
+    } else {
+      await startTimer.mutateAsync(taskId);
+    }
+  }
+
   return (
     <div
       onDragOver={(e) => {
@@ -44,6 +64,7 @@ export default function DayView({
           {occs.map((occ) => {
             const m = meta[occ.task.project_id];
             const time = occ.task.scheduled_time?.slice(0, 5);
+            const isTimerActive = activeSession?.task_id === occ.task.id;
             return (
               <li
                 key={`${occ.task.id}-${occ.date}`}
@@ -73,6 +94,19 @@ export default function DayView({
                   </span>
                 </div>
                 {time && <span className="shrink-0 text-sm text-muted">{time}</span>}
+                {!occ.completed && (
+                  <button
+                    onClick={() => toggleTimer(occ.task.id)}
+                    disabled={startTimer.isPending || stopTimer.isPending}
+                    className={`shrink-0 rounded border px-2.5 py-1 text-sm transition-colors disabled:opacity-50 ${
+                      isTimerActive
+                        ? "border-danger/60 text-danger hover:bg-danger/10"
+                        : "border-accent/40 text-accent hover:bg-accent/10"
+                    }`}
+                  >
+                    {isTimerActive ? "■ Stop" : "▶ Start"}
+                  </button>
+                )}
               </li>
             );
           })}
