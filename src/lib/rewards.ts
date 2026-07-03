@@ -27,6 +27,13 @@ export const REWARDS: Reward[] = [
   { kind: "title", key: "ascendant", label: "Ascendant", glyph: "▲", level: 15, blurb: "The climb defines you." },
   { kind: "title", key: "voidwalker", label: "Voidwalker", glyph: "☽", level: 21, blurb: "Beyond the visible sky." },
   { kind: "title", key: "starforged", label: "Starforged", glyph: "✹", level: 28, blurb: "Made of burning discipline." },
+  { kind: "title", key: "lightbearer", label: "Lightbearer", glyph: "✴", level: 36, blurb: "Others navigate by you now." },
+  { kind: "title", key: "celestine", label: "Celestine", glyph: "❂", level: 45, blurb: "Half habit, half constellation." },
+  { kind: "title", key: "dawnbringer", label: "Dawnbringer", glyph: "☀", level: 55, blurb: "Every morning answers to you." },
+  { kind: "title", key: "eclipse-sovereign", label: "Eclipse Sovereign", glyph: "◐", level: 66, blurb: "You rule both light and rest." },
+  { kind: "title", key: "worldshaper", label: "Worldshaper", glyph: "❖", level: 78, blurb: "Your hours became a world." },
+  { kind: "title", key: "transcendent", label: "Transcendent", glyph: "✺", level: 90, blurb: "Past every ceiling you were given." },
+  { kind: "title", key: "astrameath", label: "Astrameath", glyph: "✵", level: 100, blurb: "The summit has a name — yours." },
 
   // items (cosmetic trophies)
   { kind: "item", key: "ember-sigil", label: "Ember Sigil", glyph: "🜂", level: 2, blurb: "A spark that refused to die." },
