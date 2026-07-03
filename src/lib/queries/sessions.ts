@@ -11,7 +11,13 @@ export type ActiveSession = TimeSession & {
   tasks: { title: string; project_id: string } | null;
 };
 
-const TIME_KEYS = [["active-session"], ["task-time"], ["project-time"], ["xp"]];
+const TIME_KEYS = [
+  ["active-session"],
+  ["task-time"],
+  ["project-time"],
+  ["stats-sessions"],
+  ["xp"],
+];
 
 function invalidateTime(
   queryClient: ReturnType<typeof useQueryClient>,

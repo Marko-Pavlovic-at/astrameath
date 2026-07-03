@@ -87,8 +87,20 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
   reward grids; themes swap `--accent` via `<html data-theme>` (ThemeApplier in
   the app layout, palette overrides in globals.css). Goals + milestones UI in
   project detail (`goals-section.tsx`).
-- Phase 5 next: stats page — time distribution, frequency, avg/day,
-  this week/month.
-- Then: 6 AI companions, 7 game-UI polish. Post-MVP: Public Prep
+- Phase 5 (stats page) — done, verified end-to-end in browser (desktop +
+  375px, all ranges, hover readout). A range filter (this week / this month /
+  last 30 days / all time) scopes everything: KPI tiles (tracked, avg/day +
+  per-active-day, active days, best day), a per-day column chart (falls back
+  to weekly buckets past 42 days; hover/focus sets a readout line — no
+  floating tooltips to clip), and per-project distribution rows with share %,
+  active-day frequency and avg per active day (sessions of archived projects
+  fold into one muted row). Data: `["stats-sessions"]` fetches all finished
+  sessions once (client-side aggregation in `src/lib/time-stats.ts`, pure
+  functions; a session is attributed to its local start date); the key is in
+  sessions.ts TIME_KEYS so timer mutations refresh it. Charts are single-hue
+  (accent) by design — the six stat colors fail CVD checks as a categorical
+  palette; identity lives in row labels + stat glyphs.
+- Phase 6 next: AI companions.
+- Then: 7 game-UI polish. Post-MVP: Public Prep
   (Stripe, AI quotas, open signup), community, module system. Details in the
   plan doc.
