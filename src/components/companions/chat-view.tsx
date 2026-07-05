@@ -54,7 +54,15 @@ function AxisBar({ label, value }: { label: string; value: number }) {
 
 type LocalMessage = { role: "user" | "assistant"; content: string };
 
-export default function ChatView({ id }: { id: string }) {
+/** `compact` renders the same chat as a fill-parent column (companion sidebar):
+ * no back link, name links to the full-page chat. */
+export default function ChatView({
+  id,
+  compact = false,
+}: {
+  id: string;
+  compact?: boolean;
+}) {
   const queryClient = useQueryClient();
   const { data: companion } = useCompanion(id);
   const { data: messages } = useCompanionMessages(id);
@@ -143,19 +151,36 @@ export default function ChatView({ id }: { id: string }) {
   ];
 
   return (
-    <section className="mx-auto flex h-[calc(100dvh-8rem)] max-w-3xl flex-col md:h-[calc(100dvh-4rem)]">
+    <section
+      className={
+        compact
+          ? "flex h-full min-h-0 flex-col"
+          : "mx-auto flex h-[calc(100dvh-8rem)] max-w-3xl flex-col md:h-[calc(100dvh-4rem)]"
+      }
+    >
       {/* header */}
       <div className="flex items-center gap-3 border-b border-edge pb-3">
-        <Link
-          href="/companions"
-          aria-label="Back to companions"
-          className="text-muted hover:text-fg"
-        >
-          ←
-        </Link>
+        {!compact && (
+          <Link
+            href="/companions"
+            aria-label="Back to companions"
+            className="text-muted hover:text-fg"
+          >
+            ←
+          </Link>
+        )}
         <Avatar url={companion.avatar_url} name={companion.name} size="size-10" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-base leading-tight">{companion.name}</p>
+          {compact ? (
+            <Link
+              href={`/companions/${id}`}
+              className="block truncate text-base leading-tight hover:text-accent"
+            >
+              {companion.name}
+            </Link>
+          ) : (
+            <p className="truncate text-base leading-tight">{companion.name}</p>
+          )}
           <p className="truncate text-[11px] text-muted">
             {deriveArchetype(relationship)}
             {mood ? ` · ${mood}` : ""}
