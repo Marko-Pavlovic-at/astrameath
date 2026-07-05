@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { fillTemplate, parsePersona } from "@/lib/ai/persona";
 import { createClient } from "@/lib/supabase/client";
 
 /**
  * Req 16: two separable resets. The schema keeps the app world and the AI
- * world in disjoint tables on purpose, so each reset is a couple of cascade
- * deletes and they never touch each other.
+ * world in disjoint tables on purpose, so the resets never touch each other.
  */
 async function resetAppData() {
   const supabase = createClient();
@@ -21,17 +21,50 @@ async function resetAppData() {
   if (xp) throw xp;
 }
 
+/**
+ * Companions themselves survive (persona, avatar, model); only their lived
+ * history resets — chats, relationship state, memories. Each ends up exactly
+ * as freshly created: bare state row + greeting as the first message. The
+ * ai_usage ledger stays: it records real money spent, not character state.
+ */
 async function resetAiData() {
   const supabase = createClient();
-  // companions cascade → state, messages, memories
-  const del = (
-    await supabase.from("companions").delete().not("id", "is", null)
-  ).error;
-  if (del) throw del;
-  const usage = (
-    await supabase.from("ai_usage").delete().not("id", "is", null)
-  ).error;
-  if (usage) throw usage;
+  const [companionsRes, profileRes] = await Promise.all([
+    supabase.from("companions").select("id, name, persona"),
+    supabase.from("profiles").select("display_name").single(),
+  ]);
+  if (companionsRes.error) throw companionsRes.error;
+
+  for (const table of [
+    "companion_messages",
+    "companion_memories",
+    "companion_state",
+  ] as const) {
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .not("companion_id", "is", null);
+    if (error) throw error;
+  }
+
+  const userName = profileRes.data?.display_name ?? "";
+  for (const c of companionsRes.data ?? []) {
+    const { error: stateError } = await supabase
+      .from("companion_state")
+      .insert({ companion_id: c.id });
+    if (stateError) throw stateError;
+    const greeting = parsePersona(c.persona).greeting.trim();
+    if (greeting) {
+      const { error: msgError } = await supabase
+        .from("companion_messages")
+        .insert({
+          companion_id: c.id,
+          role: "assistant",
+          content: fillTemplate(greeting, c.name, userName),
+        });
+      if (msgError) throw msgError;
+    }
+  }
 }
 
 function ResetRow({
@@ -111,9 +144,9 @@ export default function DangerZone() {
           action={resetAppData}
         />
         <ResetRow
-          title="Reset AI data"
-          blurb="Deletes every companion with their chats, relationships, memories and the cost ledger. App data is untouched."
-          confirmLabel="Wipe AI data"
+          title="Reset companions"
+          blurb="Every companion starts over: chats, relationship stats, moods and memories are wiped. The characters themselves, their avatars and the cost ledger stay."
+          confirmLabel="Reset all bonds"
           action={resetAiData}
         />
       </div>
