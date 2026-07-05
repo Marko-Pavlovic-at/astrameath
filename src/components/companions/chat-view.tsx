@@ -55,13 +55,16 @@ function AxisBar({ label, value }: { label: string; value: number }) {
 type LocalMessage = { role: "user" | "assistant"; content: string };
 
 /** `compact` renders the same chat as a fill-parent column (companion sidebar):
- * no back link, name links to the full-page chat. */
+ * no back link, name links to the full-page chat. `onCollapse` adds a minimize
+ * button to the header (sidebar only). */
 export default function ChatView({
   id,
   compact = false,
+  onCollapse,
 }: {
   id: string;
   compact?: boolean;
+  onCollapse?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { data: companion } = useCompanion(id);
@@ -202,6 +205,16 @@ export default function ChatView({
         >
           Edit
         </Link>
+        {onCollapse && (
+          <button
+            onClick={onCollapse}
+            aria-label="Minimize companion"
+            title="Minimize"
+            className="rounded border border-edge px-2 py-1 text-xs text-muted transition-colors hover:border-accent/40 hover:text-fg"
+          >
+            »
+          </button>
+        )}
       </div>
 
       {/* relationship panel */}
