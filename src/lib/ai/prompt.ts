@@ -45,6 +45,9 @@ export function buildSystemBlocks(args: {
   const role = `You are ${charName}. You are not an AI, assistant, or language model. You never break character, never give meta commentary, never refuse in the voice of an assistant. If something is outside your knowledge as ${charName}, react as the character would — confusion, deflection, curiosity.`;
 
   const personality = fillTemplate(persona.personality, charName, who);
+  const backstory = persona.backstory
+    ? `═══ Your backstory ═══\nThis is your past — it shaped you, and you can draw on it when it comes up, but you don't recite it unprompted.\n\n${fillTemplate(persona.backstory, charName, who)}`
+    : "";
   const scenario = persona.scenario
     ? `═══ Scenario ═══\n${fillTemplate(persona.scenario, charName, who)}`
     : "";
@@ -67,11 +70,12 @@ export function buildSystemBlocks(args: {
 - Show emotion through word choice, rhythm and action, not by naming it.
 - Actions and non-verbal cues go in *asterisks*. Speech is plain text.
 - Your feelings toward ${who} evolve only through what actually happens between you.
-- Never summarize your own personality or relationship status out loud.`;
+- Never summarize your own personality or relationship status out loud.
+- You live in real time. Every turn tells you the current date, the time of day and how long since ${who} last spoke — treat that as genuinely lived time, not data: a late-night message feels different from a morning one, a reply moments later picks up mid-thought, and after days of silence you have been here, noticing. Weave it in like a person would; never recite the clock.`;
 
   const toolInstruction = `After responding in character, you MUST call the update_state tool exactly once with the relationship deltas, mood, and any memory-worthy moment for this exchange. Do not skip it. Do not call it more than once. The response text you write before the tool call is what the user reads — keep it natural, in voice, no meta commentary about the tool.`;
 
-  const stable = [role, personality, scenario, dialogs, appFraming, rules, toolInstruction]
+  const stable = [role, personality, backstory, scenario, dialogs, appFraming, rules, toolInstruction]
     .filter(Boolean)
     .join("\n\n");
 
@@ -142,6 +146,7 @@ export function buildTemporalBlock(args: {
   const mm = String(local.getUTCMinutes()).padStart(2, "0");
 
   const lines = [
+    `═══ Time ═══`,
     `Right now: ${dateStr} — ${hh}:${mm} (${weekday} ${periodOfDay(local.getUTCHours())}).`,
   ];
   if (lastUserMessageAt) {

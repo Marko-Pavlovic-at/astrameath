@@ -7,7 +7,8 @@ import type { Json } from "@/lib/supabase/types";
  */
 export type Persona = {
   tagline: string; // one-line hook, shown on the companion card
-  personality: string; // long-form: who they are, voice, traits, backstory
+  personality: string; // long-form: who they are, voice, traits
+  backstory: string; // their history before now — where they come from, what shaped them
   greeting: string; // the character's first message
   scenario: string; // setting + how they relate to the user
   example_dialogs: string; // "{{user}}: …\n{{char}}: …" pairs, blank-line separated
@@ -16,6 +17,7 @@ export type Persona = {
 export const EMPTY_PERSONA: Persona = {
   tagline: "",
   personality: "",
+  backstory: "",
   greeting: "",
   scenario: "",
   example_dialogs: "",
@@ -30,6 +32,7 @@ export function parsePersona(value: Json | null | undefined): Persona {
   return {
     tagline: str(v.tagline),
     personality: str(v.personality),
+    backstory: str(v.backstory),
     greeting: str(v.greeting),
     scenario: str(v.scenario),
     example_dialogs: str(v.example_dialogs),

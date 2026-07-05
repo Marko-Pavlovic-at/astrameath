@@ -1,9 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { occurrencesByDay } from "@/lib/recurrence";
-import { STAT_ORDER, type StatKind } from "@/lib/stats";
+import { STAT_ORDER, STATS, type StatKind } from "@/lib/stats";
 import type { Database } from "@/lib/supabase/types";
 import { formatDuration } from "@/lib/time";
 import { generalLevel, levelFromXp, type LevelInfo } from "@/lib/xp";
+
+const MAX_PROJECTS = 8;
+const MAX_GOALS = 6;
+const MAX_UPCOMING = 5;
 
 type Supabase = SupabaseClient<Database>;
 
@@ -25,8 +29,9 @@ function localMidnightUtc(dateStr: string, tzOffsetMinutes: number): Date {
 
 /**
  * The companion's only window into the app (it has no tool access): a compact
- * formatted summary of today's standing, built server-side from the same
- * tables the UI reads.
+ * formatted summary built server-side from the same tables the UI reads —
+ * today's standing plus projects, open goals and the week ahead. Every line is
+ * capped so the block stays small in the prompt's dynamic tail.
  */
 export async function buildAppSnapshot(
   supabase: Supabase,
@@ -37,7 +42,7 @@ export async function buildAppSnapshot(
   const today = localDateStr(now, tzOffsetMinutes);
   const midnight = localMidnightUtc(today, tzOffsetMinutes).toISOString();
 
-  const [xpRes, sessionsRes, activeRes, tasksRes, completionsRes] =
+  const [xpRes, sessionsRes, activeRes, tasksRes, completionsRes, projectsRes, goalsRes, projectTimeRes] =
     await Promise.all([
       supabase.from("xp_totals").select("*"),
       supabase
@@ -52,6 +57,18 @@ export async function buildAppSnapshot(
         .maybeSingle(),
       supabase.from("tasks").select("*"),
       supabase.from("task_completions").select("task_id, date").eq("date", today),
+      supabase
+        .from("projects")
+        .select("id, name, stat, no_xp")
+        .is("archived_at", null)
+        .order("position")
+        .order("created_at"),
+      supabase
+        .from("goals")
+        .select("title, project_id, deadline, milestones(completed_at)")
+        .is("completed_at", null)
+        .order("created_at"),
+      supabase.from("project_time_totals").select("project_id, total_seconds"),
     ]);
 
   const lines: string[] = [];
@@ -127,6 +144,79 @@ export async function buildAppSnapshot(
           open.length > 0 ? ` (${openTitles}${open.length > 3 ? ", …" : ""})` : ""
         }`
       );
+    }
+  }
+
+  // projects (what areas of life they track, with tracked time)
+  const projects = projectsRes.data ?? [];
+  const timeByProject = new Map(
+    (projectTimeRes.data ?? []).map((r) => [r.project_id, r.total_seconds ?? 0])
+  );
+  if (projects.length > 0) {
+    const parts = projects.slice(0, MAX_PROJECTS).map((p) => {
+      const secs = timeByProject.get(p.id) ?? 0;
+      const details = [
+        STATS[p.stat].label,
+        secs > 0 ? `${formatDuration(secs)} tracked` : null,
+        p.no_xp ? "casual, no XP" : null,
+      ].filter(Boolean);
+      return `"${p.name}" (${details.join(", ")})`;
+    });
+    lines.push(
+      `- Projects: ${parts.join("; ")}${projects.length > MAX_PROJECTS ? "; …" : ""}`
+    );
+  }
+
+  // open goals with milestone progress
+  const goals = goalsRes.data ?? [];
+  const projectName = new Map(projects.map((p) => [p.id, p.name]));
+  if (goals.length > 0) {
+    const parts = goals.slice(0, MAX_GOALS).map((g) => {
+      const total = g.milestones.length;
+      const done = g.milestones.filter((m) => m.completed_at !== null).length;
+      const progress = total > 0 ? `${done}/${total} milestones` : "no milestones yet";
+      const where = projectName.get(g.project_id);
+      return `"${g.title}" (${progress}${where ? `, in ${where}` : ""})`;
+    });
+    lines.push(
+      `- Open goals: ${parts.join("; ")}${goals.length > MAX_GOALS ? "; …" : ""}`
+    );
+  }
+
+  // the week ahead: scheduled occurrences over the next 7 days + undated backlog
+  if (tasksRes.data) {
+    const weekDays: string[] = [];
+    for (let i = 1; i <= 7; i++) {
+      weekDays.push(
+        localDateStr(new Date(now.getTime() + i * 86_400_000), tzOffsetMinutes)
+      );
+    }
+    const byDay = occurrencesByDay(tasksRes.data, [], weekDays);
+    const upcoming: string[] = [];
+    let upcomingTotal = 0;
+    for (const day of weekDays) {
+      for (const occ of byDay.get(day) ?? []) {
+        if (occ.completed) continue;
+        upcomingTotal++;
+        if (upcoming.length < MAX_UPCOMING) {
+          const weekday = new Date(`${day}T00:00:00Z`).toLocaleDateString(
+            "en-US",
+            { weekday: "short", timeZone: "UTC" }
+          );
+          upcoming.push(`"${occ.task.title}" ${weekday}`);
+        }
+      }
+    }
+    if (upcomingTotal > 0) {
+      lines.push(
+        `- Next 7 days: ${upcomingTotal} scheduled (${upcoming.join(", ")}${upcomingTotal > MAX_UPCOMING ? ", …" : ""})`
+      );
+    }
+    const backlog = tasksRes.data.filter(
+      (t) => !t.recurrence && !t.scheduled_date && t.status !== "done"
+    ).length;
+    if (backlog > 0) {
+      lines.push(`- Backlog: ${backlog} open task${backlog === 1 ? "" : "s"} without a date`);
     }
   }
 

@@ -53,6 +53,7 @@ export default function CompanionForm({ id }: { id?: string }) {
   const [persona, setPersona] = useState<Persona>({
     tagline: "",
     personality: "",
+    backstory: "",
     greeting: "",
     scenario: "",
     example_dialogs: "",
@@ -179,7 +180,7 @@ export default function CompanionForm({ id }: { id?: string }) {
 
         <Field
           label="Personality"
-          hint="The core of the character: who they are, how they speak, what they want, their history. The more specific, the better they hold their voice."
+          hint="The core of the character: who they are, how they speak, what they want. The more specific, the better they hold their voice."
         >
           <textarea
             value={persona.personality}
@@ -188,6 +189,19 @@ export default function CompanionForm({ id }: { id?: string }) {
             rows={10}
             className={FIELD_CLS}
             placeholder={`{{char}} is a 300-year-old star cartographer…\n\nVoice: dry, precise, allergic to sentimentality. Short sentences.\nNever says: "as an AI", modern slang.`}
+          />
+        </Field>
+
+        <Field
+          label="Backstory"
+          hint="Their history before now — where they come from, what shaped them. They draw on it when it comes up, without reciting it."
+        >
+          <textarea
+            value={persona.backstory}
+            onChange={(e) => set("backstory")(e.target.value)}
+            rows={6}
+            className={FIELD_CLS}
+            placeholder={`Born under a dead constellation, {{char}} charted skies for an empire that no longer exists…`}
           />
         </Field>
 
