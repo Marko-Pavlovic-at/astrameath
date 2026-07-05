@@ -5,7 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useXpTotals } from "@/lib/queries/xp";
 import { STAT_ORDER, type StatKind } from "@/lib/stats";
 import { createClient } from "@/lib/supabase/client";
-import { generalLevel, levelFromXp, type LevelInfo } from "@/lib/xp";
+import {
+  generalLevel,
+  levelFromXp,
+  nextGeneralLevelUp,
+  type LevelInfo,
+} from "@/lib/xp";
 
 const items = [
   { href: "/projects", label: "Projects", glyph: "◆" },
@@ -25,6 +30,7 @@ function useLevelSummary() {
   return {
     level: generalLevel(statLevels),
     totalXp: STAT_ORDER.reduce((acc, s) => acc + xp[s], 0),
+    next: nextGeneralLevelUp(statLevels),
   };
 }
 
@@ -81,11 +87,23 @@ export default function Nav() {
                 {summary.level}
               </span>
             </span>
-            <span className="min-w-0">
+            <span className="min-w-0 flex-1">
               <span className="block truncate text-base text-fg">
                 {summary.totalXp.toLocaleString()} XP
               </span>
-              <span className="text-xs text-muted">lifetime</span>
+              <span className="mt-1.5 block h-1 overflow-hidden rounded bg-panel">
+                <span
+                  className="block h-full rounded bg-accent transition-[width]"
+                  style={{
+                    width: `${Math.round(
+                      (summary.next.intoLevel / summary.next.toNext) * 100
+                    )}%`,
+                  }}
+                />
+              </span>
+              <span className="mt-1 block text-xs text-muted">
+                {summary.next.remaining} XP to Lv {summary.level + 1}
+              </span>
             </span>
           </Link>
         )}

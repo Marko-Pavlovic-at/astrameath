@@ -48,3 +48,30 @@ export function generalLevel(statLevels: Record<StatKind, LevelInfo>): number {
   const sum = Object.values(statLevels).reduce((acc, s) => acc + s.level, 0);
   return sum - Object.keys(statLevels).length + 1;
 }
+
+export type NextLevelUp = {
+  stat: StatKind;
+  remaining: number;
+  intoLevel: number;
+  toNext: number;
+};
+
+/**
+ * The stat currently closest to its next level-up — i.e. the shortest XP path
+ * to the next general level, since any stat level gained raises it by one.
+ */
+export function nextGeneralLevelUp(
+  statLevels: Record<StatKind, LevelInfo>
+): NextLevelUp {
+  let best: NextLevelUp | null = null;
+  for (const [stat, info] of Object.entries(statLevels) as [
+    StatKind,
+    LevelInfo,
+  ][]) {
+    const remaining = info.toNext - info.intoLevel;
+    if (!best || remaining < best.remaining) {
+      best = { stat, remaining, intoLevel: info.intoLevel, toNext: info.toNext };
+    }
+  }
+  return best!;
+}

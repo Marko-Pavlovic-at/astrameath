@@ -12,7 +12,13 @@ import {
   type RewardKind,
 } from "@/lib/rewards";
 import { STAT_ORDER, STATS, type StatKind } from "@/lib/stats";
-import { generalLevel, levelFromXp, XP_RATES, type LevelInfo } from "@/lib/xp";
+import {
+  generalLevel,
+  levelFromXp,
+  nextGeneralLevelUp,
+  XP_RATES,
+  type LevelInfo,
+} from "@/lib/xp";
 
 export default function ProfileView() {
   const { data: profile } = useProfile();
@@ -29,6 +35,7 @@ export default function ProfileView() {
   ) as Record<StatKind, LevelInfo>;
   const level = generalLevel(statLevels);
   const totalXp = STAT_ORDER.reduce((acc, s) => acc + xp[s], 0);
+  const next = nextGeneralLevelUp(statLevels);
 
   function saveName(e: React.FormEvent) {
     e.preventDefault();
@@ -94,9 +101,25 @@ export default function ProfileView() {
           </span>
           <span className="text-2xl text-accent">{level}</span>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm">
             {totalXp.toLocaleString()} XP across all stats
+          </p>
+          <div className="mt-2 h-1.5 overflow-hidden rounded bg-panel-2">
+            <div
+              className="h-full rounded bg-accent transition-[width]"
+              style={{
+                width: `${Math.round((next.intoLevel / next.toNext) * 100)}%`,
+              }}
+            />
+          </div>
+          <p className="mt-1.5 text-xs">
+            Level {level + 1} in{" "}
+            <span className="text-accent">{next.remaining} XP</span> — closest
+            path via{" "}
+            <span style={{ color: STATS[next.stat].color }}>
+              {STATS[next.stat].glyph} {STATS[next.stat].label}
+            </span>
           </p>
           <p className="mt-1 text-xs text-muted">
             Every stat level gained raises the general level by one. Earn XP by

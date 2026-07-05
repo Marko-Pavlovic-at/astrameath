@@ -143,18 +143,25 @@ function GoalRow({ goal, projectId }: { goal: Goal; projectId: string }) {
         <button
           onClick={() => setExpanded((v) => !v)}
           className="min-w-0 flex-1 text-left"
+          aria-expanded={expanded}
         >
           <span className={done ? "text-muted line-through" : ""}>
+            <span
+              aria-hidden
+              className="mr-1.5 inline-block text-xs text-muted"
+            >
+              {expanded ? "▾" : "▸"}
+            </span>
             {goal.title}
           </span>
-          <span className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted">
+          <span className="mt-0.5 flex flex-wrap gap-x-3 pl-4 text-xs text-muted">
             {goal.deadline && (
               <DeadlineBadge deadline={goal.deadline} done={done} />
             )}
-            <span>
+            <span className={goal.milestones.length === 0 ? "text-accent/80" : ""}>
               {goal.milestones.length > 0
                 ? `${doneCount}/${goal.milestones.length} milestones`
-                : "no milestones"}
+                : "+ add milestones"}
             </span>
           </span>
         </button>
@@ -215,6 +222,7 @@ function GoalRow({ goal, projectId }: { goal: Goal; projectId: string }) {
 
           <form onSubmit={addMilestone} className="flex flex-wrap gap-2 pt-1">
             <input
+              autoFocus={goal.milestones.length === 0}
               value={msTitle}
               onChange={(e) => setMsTitle(e.target.value)}
               placeholder="Milestone…"

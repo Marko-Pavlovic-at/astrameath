@@ -119,8 +119,13 @@ export default function ProjectsView() {
                     {p.description}
                   </p>
                 )}
-                <p className="mt-3 text-xs text-muted">
+                <p className="mt-3 flex items-center gap-2 text-xs text-muted">
                   {formatDuration(timeTotals?.[p.id] ?? 0)} tracked
+                  {p.no_xp && (
+                    <span className="rounded border border-edge px-1.5 text-[10px] uppercase tracking-wider">
+                      No XP
+                    </span>
+                  )}
                 </p>
               </Link>
             </li>

@@ -54,6 +54,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [stat, setStat] = useState<StatKind>("discipline");
+  const [noXp, setNoXp] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "all">(
@@ -80,6 +81,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
     setName(project.name);
     setDescription(project.description ?? "");
     setStat(project.stat);
+    setNoXp(project.no_xp);
     setEditing(true);
   }
 
@@ -90,6 +92,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
       name: name.trim() || project!.name,
       description: description.trim() || null,
       stat,
+      no_xp: noXp,
     });
     setEditing(false);
   }
@@ -161,6 +164,15 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
             placeholder="Description (optional)"
             className={inputCls}
           />
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={noXp}
+              onChange={(e) => setNoXp(e.target.checked)}
+              className="size-4 accent-[#c9a86a]"
+            />
+            No XP — casual project, time and completions here never award XP
+          </label>
           <div className="flex gap-2">
             <button
               type="submit"
@@ -193,6 +205,11 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
                 {STATS[project.stat].glyph} {STATS[project.stat].label}
               </span>
               <span>{formatDuration(projectTime?.[projectId] ?? 0)} tracked</span>
+              {project.no_xp && (
+                <span className="rounded border border-edge px-1.5 text-[10px] uppercase tracking-wider">
+                  No XP
+                </span>
+              )}
             </p>
             {project.description && (
               <p className="mt-2 text-sm text-muted">{project.description}</p>

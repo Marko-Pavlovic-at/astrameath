@@ -314,6 +314,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          no_xp: boolean
           position: number
           stat: Database["public"]["Enums"]["stat_kind"]
           user_id: string
@@ -326,6 +327,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          no_xp?: boolean
           position?: number
           stat: Database["public"]["Enums"]["stat_kind"]
           user_id?: string
@@ -338,6 +340,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          no_xp?: boolean
           position?: number
           stat?: Database["public"]["Enums"]["stat_kind"]
           user_id?: string
