@@ -1,9 +1,9 @@
 # Product-readiness gaps — full codebase review (2026-07-05)
 
-> **Status (Marko, 2026-07-05): ALL post-MVP.** Current priority is making the app
-> function properly for Marko alone — i.e. the items in
-> [testing-feedback-2026-07-05.md](testing-feedback-2026-07-05.md) plus Phase 7 polish.
-> Revisit this doc only when Astrameath heads toward going public.
+> **Status (Marko, 2026-07-10): now the committed next stage.** Going public is
+> the plan. This doc is the **inventory**; ordering lives in
+> [mvp-to-launch.md](mvp-to-launch.md) → "Stage 2 — Make the app deployable".
+> Sequencing: finish the MVP (Stage 1 there) first, then work through these.
 
 What's missing for Astrameath to be a **sellable digital product**, beyond Marko's own
 testing notes ([testing-feedback-2026-07-05.md](testing-feedback-2026-07-05.md)).

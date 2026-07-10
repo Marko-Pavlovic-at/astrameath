@@ -2,7 +2,8 @@
 
 > **Status: items 1–5, 7, 8 SHIPPED 2026-07-05** (commits 6ba8b54, a2419d4, 131ef12;
 > verified in browser 13/13, deployed to prod). Item 6 (Vercel vs VPS hosting cost)
-> is a business decision, parked until monetization.
+> is a business decision — **decided 2026-07-10: VPS** (see
+[mvp-to-launch.md](mvp-to-launch.md) → Stage 2C).
 
 Raw feedback from testing the deployed app after Phase 6. Documented only — no fixes
 applied yet. Code-check notes added where I verified the current behaviour.
