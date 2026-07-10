@@ -11,7 +11,10 @@ import {
   useTaskSessions,
 } from "@/lib/queries/sessions";
 import {
+  useCreateSubtask,
+  useDeleteSubtask,
   useDeleteTask,
+  useSetSubtaskCompleted,
   useUpdateTask,
   type Task,
 } from "@/lib/queries/tasks";
@@ -51,9 +54,16 @@ export default function TaskRow({
 }) {
   const updateTask = useUpdateTask(projectId);
   const deleteTask = useDeleteTask(projectId);
+  const createSubtask = useCreateSubtask(projectId);
+  const setSubtaskCompleted = useSetSubtaskCompleted(projectId);
+  const deleteSubtask = useDeleteSubtask(projectId);
   const toggleCompletion = useToggleCompletion();
   const startTimer = useStartTimer();
   const stopTimer = useStopTimer();
+
+  const subtasks = task.subtasks;
+  const subDone = subtasks.filter((s) => s.completed_at !== null).length;
+  const subPct = subtasks.length > 0 ? (subDone / subtasks.length) * 100 : 0;
 
   const recurrence = parseRecurrence(task.recurrence);
   const isRecurring = recurrence !== null;
@@ -78,6 +88,9 @@ export default function TaskRow({
   const [monthlyDay, setMonthlyDay] = useState(
     recurrence?.freq === "monthly" ? String(recurrence.day) : "1"
   );
+
+  // subtask add state
+  const [newSubtask, setNewSubtask] = useState("");
 
   // manual time state
   const [manualMinutes, setManualMinutes] = useState("");
@@ -152,6 +165,13 @@ export default function TaskRow({
     setWeeklyDays((days) =>
       days.includes(day) ? days.filter((d) => d !== day) : [...days, day]
     );
+  }
+
+  function addSubtask(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newSubtask.trim()) return;
+    createSubtask.mutate({ taskId: task.id, title: newSubtask.trim() });
+    setNewSubtask("");
   }
 
   function addManualTime(e: React.FormEvent) {
@@ -230,6 +250,20 @@ export default function TaskRow({
           </button>
         )}
       </div>
+
+      {subtasks.length > 0 && (
+        <div className="flex items-center gap-2 px-3 pb-2.5">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-panel-2">
+            <div
+              className="h-full rounded-full bg-accent transition-[width]"
+              style={{ width: `${subPct}%` }}
+            />
+          </div>
+          <span className="shrink-0 text-xs tabular-nums text-muted">
+            {Math.round(subPct)}%
+          </span>
+        </div>
+      )}
 
       {expanded && (
         <div className="space-y-4 border-t border-edge p-3">
@@ -346,6 +380,54 @@ export default function TaskRow({
               </button>
             </div>
           </form>
+
+          <div className="space-y-2">
+            <h3 className="text-xs uppercase tracking-widest text-muted">
+              Subtasks
+            </h3>
+            {subtasks.map((s) => {
+              const sDone = s.completed_at !== null;
+              return (
+                <div key={s.id} className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={sDone}
+                    onChange={() =>
+                      setSubtaskCompleted.mutate({ id: s.id, completed: !sDone })
+                    }
+                    className="size-3.5 shrink-0 accent-[#7fd4e4]"
+                    aria-label={sDone ? "Mark subtask not done" : "Mark subtask done"}
+                  />
+                  <span
+                    className={`min-w-0 flex-1 text-sm ${sDone ? "text-muted line-through" : ""}`}
+                  >
+                    {s.title}
+                  </span>
+                  <button
+                    onClick={() => deleteSubtask.mutate(s.id)}
+                    className="shrink-0 text-xs text-danger/60 hover:text-danger"
+                    aria-label="Delete subtask"
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
+            <form onSubmit={addSubtask} className="flex flex-wrap gap-2 pt-1">
+              <input
+                value={newSubtask}
+                onChange={(e) => setNewSubtask(e.target.value)}
+                placeholder="Subtask…"
+                className="min-w-32 flex-1 rounded border border-edge bg-panel-2 px-2 py-1.5 text-fg outline-none focus:border-accent"
+              />
+              <button
+                type="submit"
+                className="rounded border border-edge px-3 py-1.5 text-sm text-muted hover:text-fg"
+              >
+                + Add
+              </button>
+            </form>
+          </div>
 
           <form onSubmit={addManualTime} className="flex flex-wrap gap-2">
             <input

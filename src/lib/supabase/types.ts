@@ -347,6 +347,44 @@ export type Database = {
         }
         Relationships: []
       }
+      subtasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          position: number
+          task_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          task_id: string
+          title: string
+          user_id?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          task_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_completions: {
         Row: {
           completed_at: string
@@ -541,7 +579,15 @@ export type Database = {
           total_seconds: number | null
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_time_totals: {
         Row: {
@@ -549,7 +595,15 @@ export type Database = {
           total_seconds: number | null
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "time_sessions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       xp_totals: {
         Row: {
@@ -561,7 +615,17 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      goal_awards_xp: { Args: { p_goal_id: string }; Returns: boolean }
+      goal_stat: {
+        Args: { p_goal_id: string }
+        Returns: Database["public"]["Enums"]["stat_kind"]
+      }
+      project_awards_xp: { Args: { p_project_id: string }; Returns: boolean }
+      task_awards_xp: { Args: { p_task_id: string }; Returns: boolean }
+      task_stat: {
+        Args: { p_task_id: string }
+        Returns: Database["public"]["Enums"]["stat_kind"]
+      }
     }
     Enums: {
       message_role: "user" | "assistant"

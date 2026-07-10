@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import type { Task } from "@/lib/queries/tasks";
+import type { TaskRow } from "@/lib/queries/tasks";
 import type { Tables, TablesUpdate } from "@/lib/supabase/types";
 
 export type TaskCompletion = Tables<"task_completions">;
@@ -12,7 +12,7 @@ export function useCalendarTasks(start: string, end: string, enabled = true) {
   return useQuery({
     queryKey: ["calendar-tasks", start, end],
     enabled,
-    queryFn: async (): Promise<Task[]> => {
+    queryFn: async (): Promise<TaskRow[]> => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("tasks")
@@ -31,7 +31,7 @@ export function useCalendarTasks(start: string, end: string, enabled = true) {
 export function useUndatedTasks() {
   return useQuery({
     queryKey: ["undated-tasks"],
-    queryFn: async (): Promise<Task[]> => {
+    queryFn: async (): Promise<TaskRow[]> => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("tasks")
@@ -181,7 +181,7 @@ export function useSetTaskDone() {
       const snapshots = queryClient.getQueriesData({
         queryKey: ["calendar-tasks"],
       });
-      queryClient.setQueriesData<Task[]>(
+      queryClient.setQueriesData<TaskRow[]>(
         { queryKey: ["calendar-tasks"] },
         (tasks) =>
           tasks?.map((t) =>

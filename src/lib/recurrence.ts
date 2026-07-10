@@ -1,5 +1,5 @@
 import { parseDateStr, toDateStr } from "@/lib/dates";
-import type { Task } from "@/lib/queries/tasks";
+import type { TaskRow } from "@/lib/queries/tasks";
 import type { Json } from "@/lib/supabase/types";
 
 /**
@@ -57,7 +57,7 @@ export function describeRecurrence(rec: Recurrence): string {
 }
 
 export type Occurrence = {
-  task: Task;
+  task: TaskRow;
   date: string;
   recurring: boolean;
   completed: boolean;
@@ -69,7 +69,7 @@ export type Occurrence = {
  * creation date) onward; one-off dated tasks land on their scheduled_date.
  */
 export function occurrencesByDay(
-  tasks: Task[],
+  tasks: TaskRow[],
   completions: Array<{ task_id: string; date: string }>,
   days: string[]
 ): Map<string, Occurrence[]> {
