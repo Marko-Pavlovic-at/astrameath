@@ -26,7 +26,7 @@ export default function TimerBar() {
   }
 
   return (
-    <div className="fixed inset-x-3 bottom-[calc(3.25rem+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-md items-center gap-3 rounded-lg border border-accent/40 bg-panel px-4 py-2.5 shadow-lg shadow-black/40 md:inset-x-auto md:bottom-6 md:right-6">
+    <div className="fixed inset-x-3 bottom-[calc(3.25rem+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-md items-center gap-3 rounded-lg border border-accent/40 bg-panel px-4 py-2.5 shadow-lg shadow-black/40 md:hidden">
       <span className="size-2 shrink-0 animate-pulse rounded-full bg-accent" />
       <Link
         href={
