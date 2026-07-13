@@ -173,7 +173,9 @@ export default function Nav() {
       </aside>
 
       {/* Mobile bottom nav — the Profile glyph doubles as the level badge */}
-      <nav className="fixed inset-x-0 bottom-0 z-10 flex border-t border-edge bg-panel pb-[env(safe-area-inset-bottom)] md:hidden">
+      {/* transform-gpu: own compositing layer, so the bar isn't repainted on
+          every scroll frame (that repaint is what reads as flicker/lag) */}
+      <nav className="fixed inset-x-0 bottom-0 z-10 flex transform-gpu border-t border-edge bg-panel pb-[env(safe-area-inset-bottom)] will-change-transform md:hidden">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
           const isProfile = item.href === "/profile";

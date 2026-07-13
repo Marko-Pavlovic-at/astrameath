@@ -36,7 +36,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-dvh bg-bg font-sans text-fg">
+      {/* svh, not dvh: dvh changes as the mobile URL bar slides, relaying out
+          the page mid-scroll and dragging the fixed bottom bars with it */}
+      <body className="min-h-svh bg-bg font-sans text-fg">
         <Providers>{children}</Providers>
       </body>
     </html>

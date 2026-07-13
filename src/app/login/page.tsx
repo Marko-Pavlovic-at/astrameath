@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center p-6">
+    <main className="flex min-h-svh items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <h1 className="text-center text-3xl font-light uppercase tracking-[0.35em] text-accent">
           Astrameath

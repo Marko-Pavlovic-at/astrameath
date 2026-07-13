@@ -20,7 +20,7 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-dvh md:flex">
+    <div className="min-h-svh md:flex">
       <ThemeApplier />
       <Nav />
       {/* pb clears the mobile nav (3.25rem) AND the timer bar stacked above it */}

@@ -70,7 +70,10 @@ export default function CompanionsView() {
             const persona = parsePersona(c.persona);
             const rel = parseRelationship(c.companion_state?.relationship);
             return (
-              <li key={c.id}>
+              // grid items default to min-width:auto, so a nowrap (truncate)
+              // tagline widens the whole column instead of ellipsing — which
+              // overflowed the page and made the browser zoom out to fit
+              <li key={c.id} className="min-w-0">
                 <Link
                   href={`/companions/${c.id}`}
                   className="flex items-center gap-4 rounded-lg border border-edge bg-panel p-4 transition-colors hover:border-accent/40"

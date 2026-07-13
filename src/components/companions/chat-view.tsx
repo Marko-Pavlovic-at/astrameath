@@ -158,7 +158,7 @@ export default function ChatView({
       className={
         compact
           ? "flex h-full min-h-0 flex-col"
-          : "mx-auto flex h-[calc(100dvh-8rem)] max-w-3xl flex-col md:h-[calc(100dvh-4rem)]"
+          : "mx-auto flex h-[calc(100svh-8rem)] max-w-3xl flex-col md:h-[calc(100dvh-4rem)]"
       }
     >
       {/* header */}
