@@ -35,25 +35,39 @@ Ordered. Each is a parent task with its own subtasks.
     goals → milestones = objectives. Subtasks = decomposition of a single task.
     Keep them separate; don't merge the concepts in the UI.
 
-### 2. Move the running-timer widget out of the bottom-right corner
-- [ ] Problem: when a timer is running, the timer bar sits in the **bottom-right
+### 2. Move the running-timer widget out of the bottom-right corner — DONE (ca4357a)
+- [x] Problem: when a timer is running, the timer bar sits in the **bottom-right
       corner and covers the AI companion chat window** (`timer-bar.tsx`).
-- [ ] Relocate the running-timer display into the **nav**, sitting **between the
+- [x] Relocate the running-timer display into the **nav**, sitting **between the
       "Sign out" button and the XP / level display** (`nav.tsx`).
-- [ ] Keep start/stop controls reachable; verify it survives reload (the timer
+- [x] Keep start/stop controls reachable; verify it survives reload (the timer
       *is* the open `time_sessions` row — display change only, no data change).
+- Shipped as `SidebarTimer` in `nav.tsx` (md+, sidebar is `hidden md:flex`); the
+  floating bar went `md:hidden` and stays the mobile affordance. Exactly one
+  timer at every width.
 
-### 3. Verify calendar drag-and-drop works on mobile
-- [ ] Current DnD uses **HTML5 drag events** — verified with a real mouse on
-      desktop, **not** confirmed on touch/mobile.
-- [ ] Test on an actual phone. If native touch DnD doesn't fire, add a
-      touch-friendly path (the date-input fallback already exists in
-      `undated-sidebar.tsx` — may just need to be the primary mobile affordance).
+### 3. Calendar drag-and-drop on mobile — TESTED, BROKEN → folded into task 4
+- [x] Tested by Marko on a real phone (2026-07-13): **drag-and-drop does not
+      work on touch.** As suspected — the calendar uses **HTML5 drag events**
+      (`dragstart`/`dragover`/`drop`), which mobile browsers do not synthesise
+      from touch. This is a confirmed defect, not an open question.
+- [ ] **Fix belongs to the design pass (task 4)** — it's a mobile interaction
+      design problem, not a bug to patch in isolation. Options, cheapest first:
+  - Make the **date-input fallback the primary mobile affordance** (already
+    exists in `undated-sidebar.tsx`) — tap a task → pick a date. No DnD at all
+    on touch. Cheapest, and arguably the better phone interaction anyway.
+  - **Pointer-events-based DnD** (`pointerdown`/`pointermove` + touch-action)
+    replacing the HTML5 API, so one code path serves mouse and touch.
+  - A drag library with touch support (dnd-kit) — heaviest; only if the
+    hand-rolled pointer path proves fiddly.
+- Decide the affordance during task 4 rather than bolting touch onto the
+  existing HTML5 path.
 
-### 4. Mobile view pass
+### 4. Mobile view pass / design pass
 - [ ] Full mobile/responsive fixes (pulled forward from Phase 7's "responsive
       audit at 375/900/1200px"). This is where the mobile-view work lives now.
-- [ ] Absorbs whatever falls out of tasks 2 & 3 above on small screens.
+- [ ] **Owns the calendar touch-DnD fix from task 3** (see the options above).
+- [ ] Absorbs whatever else falls out of tasks 2 & 3 on small screens.
 
 > After Stage 1: **Phase 7 polish** as originally planned — theming pass
 > (Hollow Knight / Dark Souls / WuWa mood), animations, PWA install. Responsive
@@ -122,9 +136,13 @@ section expands it into the real scope. Full item-by-item detail (with the
 
 ---
 
-## Current status snapshot
-- Stages 1 & 2 above are **not started** (this doc written 2026-07-10).
+## Current status snapshot (updated 2026-07-13)
+- **Stage 1, task 1 (subtasks + progress bar)** — done, `3647cba`.
+- **Stage 1, task 2 (timer out of the corner)** — done, `ca4357a`. Live in prod.
+- **Stage 1, task 3 (calendar DnD on mobile)** — tested on a phone, **broken on
+  touch**; the fix is now owned by task 4 (the design pass), see above.
+- **Stage 1, task 4 (mobile / design pass)** — **not started; this is next.** It
+  now carries the touch-DnD fix as well as the responsive audit.
+- Stage 2 (go public) — not started.
 - Everything through Phase 6 + the 2026-07-05 testing-feedback pass is shipped
   and deployed (see AGENTS.md status + git log).
-- Immediate focus: **Stage 1, task 1 (subtasks + progress bar)** unless Marko
-  reorders.
