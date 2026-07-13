@@ -116,7 +116,7 @@ export default function StatsView() {
                 setRange(r.key);
                 setPicked(null);
               }}
-              className={`rounded border px-2 py-1 text-xs transition-colors ${
+              className={`inline-flex min-h-11 items-center rounded border px-3 text-xs transition-colors sm:min-h-0 sm:px-2 sm:py-1 ${
                 range === r.key
                   ? "border-accent/60 bg-panel-2 text-accent"
                   : "border-edge text-muted hover:border-accent/40 hover:text-fg"
@@ -177,6 +177,9 @@ export default function StatsView() {
           {buckets.map((b) => (
             <button
               key={b.date}
+              type="button"
+              // touch has no hover: the tap has to set the readout itself
+              onClick={() => setPicked((p) => (p?.date === b.date ? null : b))}
               onMouseEnter={() => setPicked(b)}
               onFocus={() => setPicked(b)}
               aria-label={`${bucketLabel(b.date)}: ${formatDuration(b.seconds)}`}

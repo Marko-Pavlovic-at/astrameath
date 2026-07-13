@@ -80,7 +80,7 @@ function DayColumn({
     >
       <button
         onClick={() => onSelectDay(date)}
-        className={`flex w-full items-baseline gap-1.5 px-0.5 text-left text-xs sm:flex-col sm:gap-0 ${
+        className={`flex min-h-11 w-full items-center gap-1.5 px-0.5 text-left text-xs sm:min-h-0 sm:flex-col sm:items-baseline sm:gap-0 ${
           isToday ? "text-accent" : "text-muted"
         } hover:text-fg`}
       >

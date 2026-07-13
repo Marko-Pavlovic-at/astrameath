@@ -23,7 +23,8 @@ export default async function AppLayout({
     <div className="min-h-dvh md:flex">
       <ThemeApplier />
       <Nav />
-      <main className="min-w-0 flex-1 p-4 pb-24 md:p-8 md:pb-8">{children}</main>
+      {/* pb clears the mobile nav (3.25rem) AND the timer bar stacked above it */}
+      <main className="min-w-0 flex-1 p-4 pb-32 md:p-8 md:pb-8">{children}</main>
       <CompanionSidebar />
       <TimerBar />
     </div>

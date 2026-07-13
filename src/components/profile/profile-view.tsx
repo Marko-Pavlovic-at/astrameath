@@ -80,7 +80,7 @@ export default function ProfileView() {
               setName(profile.display_name ?? "");
               setEditingName(true);
             }}
-            className="text-xl hover:text-accent"
+            className="inline-flex min-h-11 items-center text-xl hover:text-accent sm:min-h-0"
             title="Edit name"
           >
             {profile.display_name ?? "Unnamed"}

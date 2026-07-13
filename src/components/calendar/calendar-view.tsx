@@ -178,7 +178,7 @@ export default function CalendarView() {
             <button
               key={v.value}
               onClick={() => setParams({ view: v.value }, { push: true })}
-              className={`rounded border px-2.5 py-1 text-xs transition-colors ${
+              className={`inline-flex min-h-11 items-center rounded border px-3 text-xs transition-colors sm:min-h-0 sm:px-2.5 sm:py-1 ${
                 view === v.value
                   ? "border-accent/40 text-accent"
                   : "border-edge text-muted hover:text-fg"
@@ -194,7 +194,7 @@ export default function CalendarView() {
         {view === "day" && (
           <button
             onClick={() => setParams({ view: "month" })}
-            className="mr-1 rounded border border-edge px-2.5 py-1 text-xs text-muted hover:text-fg"
+            className="mr-1 inline-flex min-h-11 items-center rounded border border-edge px-3 text-xs text-muted hover:text-fg sm:min-h-0 sm:px-2.5 sm:py-1"
           >
             ← Month
           </button>
@@ -202,20 +202,20 @@ export default function CalendarView() {
         <button
           onClick={() => navigate(-1)}
           aria-label="Previous"
-          className="rounded border border-edge px-2.5 py-1 text-sm text-muted hover:text-fg"
+          className="inline-flex size-11 items-center justify-center rounded border border-edge text-sm text-muted hover:text-fg sm:size-auto sm:px-2.5 sm:py-1"
         >
           ‹
         </button>
         <button
           onClick={() => setParams({ date: today })}
-          className="rounded border border-edge px-2.5 py-1 text-xs text-muted hover:text-fg"
+          className="inline-flex min-h-11 items-center rounded border border-edge px-3 text-xs text-muted hover:text-fg sm:min-h-0 sm:px-2.5 sm:py-1"
         >
           Today
         </button>
         <button
           onClick={() => navigate(1)}
           aria-label="Next"
-          className="rounded border border-edge px-2.5 py-1 text-sm text-muted hover:text-fg"
+          className="inline-flex size-11 items-center justify-center rounded border border-edge text-sm text-muted hover:text-fg sm:size-auto sm:px-2.5 sm:py-1"
         >
           ›
         </button>

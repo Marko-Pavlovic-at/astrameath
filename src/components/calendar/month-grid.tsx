@@ -6,6 +6,9 @@ import { WEEKDAYS } from "@/lib/dates";
 import type { Occurrence } from "@/lib/recurrence";
 
 const MAX_CHIPS = 3;
+// Below sm a cell is ~47px wide — a title truncates to three characters, so
+// phones get project-coloured dots instead and tap through to the day view.
+const MAX_DOTS = 4;
 
 export default function MonthGrid({
   weeks,
@@ -94,7 +97,7 @@ function DayCell({
       >
         {Number(date.slice(8))}
       </span>
-      <div className="mt-0.5 space-y-0.5">
+      <div className="mt-0.5 hidden space-y-0.5 sm:block">
         {occs.slice(0, MAX_CHIPS).map((occ) => (
           <TaskChip
             key={`${occ.task.id}-${occ.date}`}
@@ -104,6 +107,20 @@ function DayCell({
         ))}
         {extra > 0 && (
           <span className="block px-1 text-[10px] text-muted">+{extra} more</span>
+        )}
+      </div>
+      <div className="mt-1 flex flex-wrap items-center gap-1 sm:hidden">
+        {occs.slice(0, MAX_DOTS).map((occ) => (
+          <span
+            key={`${occ.task.id}-${occ.date}`}
+            style={{ backgroundColor: colors[occ.task.project_id] ?? "#8892a0" }}
+            className={`size-1.5 rounded-full ${occ.completed ? "opacity-30" : ""}`}
+          />
+        ))}
+        {occs.length > MAX_DOTS && (
+          <span className="text-[9px] leading-none text-muted">
+            +{occs.length - MAX_DOTS}
+          </span>
         )}
       </div>
     </div>

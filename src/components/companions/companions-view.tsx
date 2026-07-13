@@ -45,7 +45,7 @@ export default function CompanionsView() {
         <h1 className="text-xl uppercase tracking-widest">Companions</h1>
         <Link
           href="/companions/new"
-          className="rounded border border-accent/40 px-3 py-1.5 text-sm text-accent transition-colors hover:bg-accent/10"
+          className="inline-flex min-h-11 items-center rounded border border-accent/40 px-3 text-sm text-accent transition-colors hover:bg-accent/10 sm:min-h-0 sm:py-1.5"
         >
           + New companion
         </Link>

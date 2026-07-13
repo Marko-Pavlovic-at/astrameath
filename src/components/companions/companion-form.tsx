@@ -126,7 +126,7 @@ export default function CompanionForm({ id }: { id?: string }) {
         </h1>
         <Link
           href={editing && id ? `/companions/${id}` : "/companions"}
-          className="text-sm text-muted hover:text-fg"
+          className="inline-flex min-h-11 items-center px-1 text-sm text-muted hover:text-fg sm:min-h-0"
         >
           Cancel
         </Link>
@@ -250,7 +250,7 @@ export default function CompanionForm({ id }: { id?: string }) {
           <button
             type="submit"
             disabled={create.isPending || update.isPending || uploading}
-            className="rounded border border-accent/40 px-4 py-2 text-sm uppercase tracking-widest text-accent transition-colors hover:bg-accent/10 disabled:opacity-50"
+            className="inline-flex min-h-11 items-center rounded border border-accent/40 px-4 text-sm uppercase tracking-widest text-accent transition-colors hover:bg-accent/10 disabled:opacity-50 sm:min-h-0 sm:py-2"
           >
             {editing ? "Save changes" : "Create companion"}
           </button>

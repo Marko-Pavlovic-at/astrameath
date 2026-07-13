@@ -63,11 +63,40 @@ Ordered. Each is a parent task with its own subtasks.
 - Decide the affordance during task 4 rather than bolting touch onto the
   existing HTML5 path.
 
-### 4. Mobile view pass / design pass
-- [ ] Full mobile/responsive fixes (pulled forward from Phase 7's "responsive
-      audit at 375/900/1200px"). This is where the mobile-view work lives now.
-- [ ] **Owns the calendar touch-DnD fix from task 3** (see the options above).
-- [ ] Absorbs whatever else falls out of tasks 2 & 3 on small screens.
+### 4. Mobile view pass / design pass — DONE (2026-07-13)
+Audited all ten routes at 375px in real Chromium (touch emulation, running
+timer, seeded data). The layout was already sound — **no horizontal overflow on
+any route, no console errors, every input ≥16px** — so the pass was about touch,
+not breakage. What shipped:
+- [x] **Month calendar was unusable on a phone** (the real headline, worse than
+      the DnD bug): 7 columns × 47px cells truncated every title to "Shi…".
+      Below `sm` the grid now renders **project-coloured dots** (max 4, then
+      "+N") and a tap opens the day view, which reads properly. Chips still
+      render ≥sm — desktop is unchanged.
+- [x] **Touch DnD resolved (task 3):** the date field is now the touch path.
+      Copy is **pointer-based, not width-based** (`pointer-fine:`) so a touch
+      tablet — wide *and* coarse — gets "Pick a date to schedule." rather than a
+      lie about dragging. HTML5 DnD is left intact for mice.
+- [x] **Tap targets to ~44px**: checkboxes (were 16px, 12px in week view — the
+      most-tapped control in the app) via a padded `<label>` wrapper that grows
+      the hit area without inflating the box; calendar arrows/toggles, stats
+      range chips, Start/Stop, goal/subtask ✕, and the page header buttons.
+- [x] **Stats chart was hover-only** — decorative on a phone. Bars now take a
+      tap to set the readout.
+- [x] Content padding cleared the timer bar (`pb-24` = 96px < nav 52px + bar
+      48px, so the last card sat under it) and the project-detail new-task form
+      no longer wraps across three ragged rows.
+- Compact styling is gated on **wide AND fine pointer** (`sm:pointer-fine:`), so
+  a small screen always keeps big targets.
+- GOTCHA for future browser checks: Playwright's `isMobile`/`hasTouch` still
+  reports `pointer: fine`, so the CSS a real phone takes is only reachable by
+  forcing it over CDP (`Emulation.setEmulatedMedia`) — **and the override resets
+  on navigation**, so re-apply it on the final page or the test silently
+  measures the desktop branch.
+
+> Still open for **Phase 7 polish**: theming pass, animations, PWA install.
+> Only known sub-44px target left: stats chart columns (23px wide — inherent to
+> a bar chart; they are 127px tall, adjacent, and now tappable).
 
 > After Stage 1: **Phase 7 polish** as originally planned — theming pass
 > (Hollow Knight / Dark Souls / WuWa mood), animations, PWA install. Responsive
@@ -137,12 +166,15 @@ section expands it into the real scope. Full item-by-item detail (with the
 ---
 
 ## Current status snapshot (updated 2026-07-13)
-- **Stage 1, task 1 (subtasks + progress bar)** — done, `3647cba`.
-- **Stage 1, task 2 (timer out of the corner)** — done, `ca4357a`. Live in prod.
-- **Stage 1, task 3 (calendar DnD on mobile)** — tested on a phone, **broken on
-  touch**; the fix is now owned by task 4 (the design pass), see above.
-- **Stage 1, task 4 (mobile / design pass)** — **not started; this is next.** It
-  now carries the touch-DnD fix as well as the responsive audit.
-- Stage 2 (go public) — not started.
+- **Stage 1 is COMPLETE.** All four tasks shipped:
+  1. subtasks + progress bar — `3647cba`
+  2. timer out of the corner — `ca4357a`
+  3. calendar DnD on touch — resolved inside the design pass (date field is the
+     touch path; drag copy is pointer-gated)
+  4. mobile / design pass — audited at 375px and fixed; see above
+- **Next: Phase 7 polish** — theming pass, animations, PWA install. The
+  responsive audit that Phase 7 used to carry is done.
+- Stage 2 (go public) — not started. Biggest financial risk stands: `/api/ai/*`
+  has no per-user quota and the `ANTHROPIC_API_KEY` is shared.
 - Everything through Phase 6 + the 2026-07-05 testing-feedback pass is shipped
   and deployed (see AGENTS.md status + git log).

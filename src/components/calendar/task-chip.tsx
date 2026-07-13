@@ -26,18 +26,22 @@ export default function TaskChip({
         e.dataTransfer.setData("text/plain", occ.task.id);
       }}
       style={{ borderLeftColor: color ?? "transparent" }}
-      className="flex items-center gap-1 rounded border-l-2 bg-panel-2 px-1 py-0.5 text-[10px] leading-tight"
+      className="flex items-center gap-1 rounded border-l-2 bg-panel-2 px-2 py-1 text-xs leading-tight sm:px-1 sm:py-0.5 sm:text-[10px]"
       title={occ.task.title}
     >
       {onToggle && (
-        <input
-          type="checkbox"
-          checked={occ.completed}
-          onChange={onToggle}
+        <label
+          className="flex shrink-0 cursor-pointer items-center p-2.5 sm:p-0.5"
           onClick={(e) => e.stopPropagation()}
-          className="size-3 shrink-0 accent-[#7fd4e4]"
-          aria-label={`Mark "${occ.task.title}" ${occ.completed ? "not done" : "done"}`}
-        />
+        >
+          <input
+            type="checkbox"
+            checked={occ.completed}
+            onChange={onToggle}
+            className="size-5 accent-[#7fd4e4] sm:size-3"
+            aria-label={`Mark "${occ.task.title}" ${occ.completed ? "not done" : "done"}`}
+          />
+        </label>
       )}
       {showTime && time && <span className="shrink-0 text-muted">{time}</span>}
       <span

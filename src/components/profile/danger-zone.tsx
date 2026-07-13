@@ -107,13 +107,13 @@ function ResetRow({
           <button
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
-            className="rounded border border-danger/60 px-3 py-1.5 text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+            className="inline-flex min-h-11 items-center rounded border border-danger/60 px-3 text-danger transition-colors hover:bg-danger/10 disabled:opacity-50 sm:min-h-0 sm:py-1.5"
           >
             {mutation.isPending ? "Wiping…" : confirmLabel}
           </button>
           <button
             onClick={() => setArmed(false)}
-            className="text-muted hover:text-fg"
+            className="inline-flex min-h-11 items-center px-1 text-muted hover:text-fg sm:min-h-0"
           >
             Cancel
           </button>
@@ -121,7 +121,7 @@ function ResetRow({
       ) : (
         <button
           onClick={() => setArmed(true)}
-          className="rounded border border-edge px-3 py-1.5 text-sm text-muted transition-colors hover:border-danger/50 hover:text-danger"
+          className="inline-flex min-h-11 items-center rounded border border-edge px-3 text-sm text-muted transition-colors hover:border-danger/50 hover:text-danger sm:min-h-0 sm:py-1.5"
         >
           Reset…
         </button>

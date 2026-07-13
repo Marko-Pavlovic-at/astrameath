@@ -185,22 +185,25 @@ export default function TaskRow({
 
   return (
     <li className="rounded-lg border border-edge bg-panel">
-      <div className="flex items-center gap-3 p-3">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={toggleDone}
-          className="size-4 shrink-0 accent-[#7fd4e4]"
-          aria-label={
-            isRecurring
-              ? checked
-                ? "Mark today as not done"
-                : "Mark today as done"
-              : checked
-                ? "Mark as not done"
-                : "Mark as done"
-          }
-        />
+      <div className="flex items-center gap-1 p-3 sm:gap-3">
+        {/* padding on the label, not the box: ~40px touch target, 20px visual */}
+        <label className="-m-1 flex shrink-0 cursor-pointer items-center p-2.5 sm:p-1.5">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={toggleDone}
+            className="size-5 accent-[#7fd4e4] sm:size-4"
+            aria-label={
+              isRecurring
+                ? checked
+                  ? "Mark today as not done"
+                  : "Mark today as done"
+                : checked
+                  ? "Mark as not done"
+                  : "Mark as done"
+            }
+          />
+        </label>
         <button
           onClick={() => setExpanded((v) => !v)}
           className="min-w-0 flex-1 text-left"
@@ -240,7 +243,7 @@ export default function TaskRow({
           <button
             onClick={onToggleTimer}
             disabled={startTimer.isPending || stopTimer.isPending}
-            className={`shrink-0 rounded border px-2.5 py-1 text-sm transition-colors disabled:opacity-50 ${
+            className={`inline-flex min-h-11 shrink-0 items-center rounded border px-3 text-sm transition-colors disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:py-1 ${
               isTimerActive
                 ? "border-danger/60 text-danger hover:bg-danger/10"
                 : "border-accent/40 text-accent hover:bg-accent/10"
@@ -388,16 +391,20 @@ export default function TaskRow({
             {subtasks.map((s) => {
               const sDone = s.completed_at !== null;
               return (
-                <div key={s.id} className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={sDone}
-                    onChange={() =>
-                      setSubtaskCompleted.mutate({ id: s.id, completed: !sDone })
-                    }
-                    className="size-3.5 shrink-0 accent-[#7fd4e4]"
-                    aria-label={sDone ? "Mark subtask not done" : "Mark subtask done"}
-                  />
+                <div key={s.id} className="flex items-center gap-1 sm:gap-3">
+                  <label className="-m-1 flex shrink-0 cursor-pointer items-center p-2.5 sm:p-1.5">
+                    <input
+                      type="checkbox"
+                      checked={sDone}
+                      onChange={() =>
+                        setSubtaskCompleted.mutate({ id: s.id, completed: !sDone })
+                      }
+                      className="size-5 accent-[#7fd4e4] sm:size-3.5"
+                      aria-label={
+                        sDone ? "Mark subtask not done" : "Mark subtask done"
+                      }
+                    />
+                  </label>
                   <span
                     className={`min-w-0 flex-1 text-sm ${sDone ? "text-muted line-through" : ""}`}
                   >
@@ -405,7 +412,7 @@ export default function TaskRow({
                   </span>
                   <button
                     onClick={() => deleteSubtask.mutate(s.id)}
-                    className="shrink-0 text-xs text-danger/60 hover:text-danger"
+                    className="-m-1 flex size-10 shrink-0 items-center justify-center text-xs text-danger/60 hover:text-danger sm:size-6"
                     aria-label="Delete subtask"
                   >
                     ✕
@@ -475,7 +482,7 @@ export default function TaskRow({
                   {s.note && <span className="truncate">— {s.note}</span>}
                   <button
                     onClick={() => deleteSession.mutate(s.id)}
-                    className="ml-auto text-danger/70 hover:text-danger"
+                    className="-m-1 ml-auto flex size-9 shrink-0 items-center justify-center text-danger/70 hover:text-danger sm:size-6"
                     aria-label="Delete session"
                   >
                     ✕

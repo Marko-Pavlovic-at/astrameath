@@ -15,8 +15,13 @@ export default function UndatedSidebar() {
       <h2 className="text-xs uppercase tracking-widest text-muted">
         Undated tasks
       </h2>
+      {/* HTML5 drag events never fire from touch, so coarse pointers are told
+          about the date field instead — it is the only path that works there. */}
       <p className="mt-1 text-[11px] text-muted">
-        Drag onto a day, or pick a date.
+        <span className="hidden pointer-fine:inline">
+          Drag onto a day, or pick a date.
+        </span>
+        <span className="pointer-fine:hidden">Pick a date to schedule.</span>
       </p>
       <ul className="mt-2 space-y-1.5">
         {tasks?.map((t) => {
@@ -26,7 +31,7 @@ export default function UndatedSidebar() {
               key={t.id}
               draggable
               onDragStart={(e) => e.dataTransfer.setData("text/plain", t.id)}
-              className="cursor-grab rounded border border-edge bg-panel p-2 active:cursor-grabbing"
+              className="rounded border border-edge bg-panel p-2 pointer-fine:cursor-grab pointer-fine:active:cursor-grabbing"
             >
               <span className="block truncate text-sm">{t.title}</span>
               <span className="mt-1 flex items-center gap-2 text-[10px] text-muted">
@@ -41,16 +46,16 @@ export default function UndatedSidebar() {
                 >
                   ● {PRIORITIES[t.priority].label}
                 </span>
-                <input
-                  type="date"
-                  onChange={(e) => {
-                    if (e.target.value)
-                      scheduleTask.mutate({ id: t.id, date: e.target.value });
-                  }}
-                  className="ml-auto shrink-0 rounded border border-edge bg-panel-2 px-1 py-0.5 text-muted outline-none focus:border-accent"
-                  aria-label={`Schedule "${t.title}"`}
-                />
               </span>
+              <input
+                type="date"
+                onChange={(e) => {
+                  if (e.target.value)
+                    scheduleTask.mutate({ id: t.id, date: e.target.value });
+                }}
+                className="mt-2 block min-h-11 w-full rounded border border-edge bg-panel-2 px-2 text-muted outline-none focus:border-accent sm:pointer-fine:mt-1.5 sm:pointer-fine:min-h-0 sm:pointer-fine:py-1"
+                aria-label={`Schedule "${t.title}"`}
+              />
             </li>
           );
         })}

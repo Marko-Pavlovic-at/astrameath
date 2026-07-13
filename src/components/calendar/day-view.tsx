@@ -68,15 +68,17 @@ export default function DayView({
             return (
               <li
                 key={`${occ.task.id}-${occ.date}`}
-                className="flex items-center gap-3 rounded-lg border border-edge bg-panel p-3"
+                className="flex items-center gap-1 rounded-lg border border-edge bg-panel p-3 sm:gap-3"
               >
-                <input
-                  type="checkbox"
-                  checked={occ.completed}
-                  onChange={() => onToggle(occ)}
-                  className="size-4 shrink-0 accent-[#7fd4e4]"
-                  aria-label={`Mark "${occ.task.title}" ${occ.completed ? "not done" : "done"}`}
-                />
+                <label className="-m-1 flex shrink-0 cursor-pointer items-center p-2.5 sm:p-1.5">
+                  <input
+                    type="checkbox"
+                    checked={occ.completed}
+                    onChange={() => onToggle(occ)}
+                    className="size-5 accent-[#7fd4e4] sm:size-4"
+                    aria-label={`Mark "${occ.task.title}" ${occ.completed ? "not done" : "done"}`}
+                  />
+                </label>
                 <div className="min-w-0 flex-1">
                   <span className={occ.completed ? "text-muted line-through" : ""}>
                     {occ.task.title}
@@ -98,7 +100,7 @@ export default function DayView({
                   <button
                     onClick={() => toggleTimer(occ.task.id)}
                     disabled={startTimer.isPending || stopTimer.isPending}
-                    className={`shrink-0 rounded border px-2.5 py-1 text-sm transition-colors disabled:opacity-50 ${
+                    className={`inline-flex min-h-11 shrink-0 items-center rounded border px-3 text-sm transition-colors disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:py-1 ${
                       isTimerActive
                         ? "border-danger/60 text-danger hover:bg-danger/10"
                         : "border-accent/40 text-accent hover:bg-accent/10"

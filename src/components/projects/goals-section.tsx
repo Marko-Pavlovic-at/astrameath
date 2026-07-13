@@ -54,7 +54,7 @@ export default function GoalsSection({ projectId }: { projectId: string }) {
         </h2>
         <button
           onClick={() => setAdding((v) => !v)}
-          className="rounded border border-edge px-2 py-1 text-xs text-muted hover:text-fg"
+          className="inline-flex min-h-11 items-center rounded border border-edge px-3 text-xs text-muted hover:text-fg sm:min-h-0 sm:px-2 sm:py-1"
         >
           {adding ? "Cancel" : "+ Goal"}
         </button>
@@ -130,16 +130,18 @@ function GoalRow({ goal, projectId }: { goal: Goal; projectId: string }) {
 
   return (
     <li className="rounded-lg border border-edge bg-panel">
-      <div className="flex items-center gap-3 p-3">
-        <input
-          type="checkbox"
-          checked={done}
-          onChange={() =>
-            setGoalCompleted.mutate({ id: goal.id, completed: !done })
-          }
-          className="size-4 shrink-0 accent-[#c9a86a]"
-          aria-label={done ? "Mark goal not completed" : "Mark goal completed"}
-        />
+      <div className="flex items-center gap-1 p-3 sm:gap-3">
+        <label className="-m-1 flex shrink-0 cursor-pointer items-center p-2.5 sm:p-1.5">
+          <input
+            type="checkbox"
+            checked={done}
+            onChange={() =>
+              setGoalCompleted.mutate({ id: goal.id, completed: !done })
+            }
+            className="size-5 accent-[#c9a86a] sm:size-4"
+            aria-label={done ? "Mark goal not completed" : "Mark goal completed"}
+          />
+        </label>
         <button
           onClick={() => setExpanded((v) => !v)}
           className="min-w-0 flex-1 text-left"
@@ -172,7 +174,7 @@ function GoalRow({ goal, projectId }: { goal: Goal; projectId: string }) {
             )
               deleteGoal.mutate(goal.id);
           }}
-          className="shrink-0 text-sm text-danger/60 hover:text-danger"
+          className="-m-1 flex size-10 shrink-0 items-center justify-center text-sm text-danger/60 hover:text-danger sm:size-6"
           aria-label="Delete goal"
         >
           ✕
@@ -184,21 +186,23 @@ function GoalRow({ goal, projectId }: { goal: Goal; projectId: string }) {
           {goal.milestones.map((m) => {
             const msDone = m.completed_at !== null;
             return (
-              <div key={m.id} className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={msDone}
-                  onChange={() =>
-                    setMilestoneCompleted.mutate({
-                      id: m.id,
-                      completed: !msDone,
-                    })
-                  }
-                  className="size-3.5 shrink-0 accent-[#c9a86a]"
-                  aria-label={
-                    msDone ? "Mark milestone not done" : "Mark milestone done"
-                  }
-                />
+              <div key={m.id} className="flex items-center gap-1 sm:gap-3">
+                <label className="-m-1 flex shrink-0 cursor-pointer items-center p-2.5 sm:p-1.5">
+                  <input
+                    type="checkbox"
+                    checked={msDone}
+                    onChange={() =>
+                      setMilestoneCompleted.mutate({
+                        id: m.id,
+                        completed: !msDone,
+                      })
+                    }
+                    className="size-5 accent-[#c9a86a] sm:size-3.5"
+                    aria-label={
+                      msDone ? "Mark milestone not done" : "Mark milestone done"
+                    }
+                  />
+                </label>
                 <span
                   className={`min-w-0 flex-1 text-sm ${msDone ? "text-muted line-through" : ""}`}
                 >
@@ -211,7 +215,7 @@ function GoalRow({ goal, projectId }: { goal: Goal; projectId: string }) {
                 </span>
                 <button
                   onClick={() => deleteMilestone.mutate(m.id)}
-                  className="shrink-0 text-xs text-danger/60 hover:text-danger"
+                  className="-m-1 flex size-10 shrink-0 items-center justify-center text-xs text-danger/60 hover:text-danger sm:size-6"
                   aria-label="Delete milestone"
                 >
                   ✕

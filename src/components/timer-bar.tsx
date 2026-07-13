@@ -32,7 +32,7 @@ export default function TimerBar() {
         href={
           session.tasks ? `/projects/${session.tasks.project_id}` : "/projects"
         }
-        className="min-w-0 flex-1 truncate text-sm"
+        className="flex min-h-11 min-w-0 flex-1 items-center truncate text-sm"
       >
         {session.tasks?.title ?? "Tracking"}
       </Link>
@@ -42,7 +42,7 @@ export default function TimerBar() {
       <button
         onClick={onStop}
         disabled={stopTimer.isPending}
-        className="shrink-0 rounded border border-danger/60 px-2.5 py-1 text-sm text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+        className="inline-flex min-h-11 shrink-0 items-center rounded border border-danger/60 px-3 text-sm text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
       >
         ■ Stop
       </button>

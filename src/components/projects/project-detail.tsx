@@ -124,7 +124,10 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
 
   return (
     <section className="mx-auto max-w-3xl">
-      <Link href="/projects" className="text-xs text-muted hover:text-fg">
+      <Link
+        href="/projects"
+        className="inline-flex min-h-11 items-center text-xs text-muted hover:text-fg sm:min-h-0"
+      >
         ← Projects
       </Link>
 
@@ -217,7 +220,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
           </div>
           <button
             onClick={startEditing}
-            className="shrink-0 rounded border border-edge px-3 py-1.5 text-sm text-muted hover:text-fg"
+            className="inline-flex min-h-11 shrink-0 items-center rounded border border-edge px-3 text-sm text-muted hover:text-fg sm:min-h-0 sm:py-1.5"
           >
             Edit
           </button>
@@ -226,40 +229,47 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
 
       <GoalsSection projectId={projectId} />
 
-      <form onSubmit={addTask} className="mt-6 flex flex-wrap gap-2">
+      {/* narrow: title on its own line, controls in a row under it (sm:contents
+          dissolves the wrapper so ≥sm keeps the original single-row form) */}
+      <form
+        onSubmit={addTask}
+        className="mt-6 space-y-2 sm:flex sm:flex-wrap sm:gap-2 sm:space-y-0"
+      >
         <input
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           placeholder="New task…"
-          className="min-w-40 flex-1 rounded border border-edge bg-panel-2 px-3 py-2 text-fg outline-none focus:border-accent"
+          className="w-full rounded border border-edge bg-panel-2 px-3 py-2 text-fg outline-none focus:border-accent sm:w-auto sm:min-w-40 sm:flex-1"
         />
-        <select
-          value={newPriority}
-          onChange={(e) => setNewPriority(e.target.value as TaskPriority)}
-          className="rounded border border-edge bg-panel-2 px-2 py-2 text-fg outline-none focus:border-accent"
-          aria-label="Priority"
-        >
-          {PRIORITY_ORDER.map((p) => (
-            <option key={p} value={p}>
-              {PRIORITIES[p].label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          min={1}
-          value={newEstimate}
-          onChange={(e) => setNewEstimate(e.target.value)}
-          placeholder="Est. min"
-          className="w-24 rounded border border-edge bg-panel-2 px-2 py-2 text-fg outline-none focus:border-accent"
-        />
-        <button
-          type="submit"
-          disabled={createTask.isPending}
-          className="rounded border border-accent/40 px-4 py-2 text-sm text-accent hover:bg-accent/10 disabled:opacity-50"
-        >
-          Add
-        </button>
+        <div className="flex gap-2 sm:contents">
+          <select
+            value={newPriority}
+            onChange={(e) => setNewPriority(e.target.value as TaskPriority)}
+            className="min-h-11 flex-1 rounded border border-edge bg-panel-2 px-2 text-fg outline-none focus:border-accent sm:min-h-0 sm:flex-none sm:py-2"
+            aria-label="Priority"
+          >
+            {PRIORITY_ORDER.map((p) => (
+              <option key={p} value={p}>
+                {PRIORITIES[p].label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            min={1}
+            value={newEstimate}
+            onChange={(e) => setNewEstimate(e.target.value)}
+            placeholder="Est. min"
+            className="min-h-11 w-24 rounded border border-edge bg-panel-2 px-2 text-fg outline-none focus:border-accent sm:min-h-0 sm:py-2"
+          />
+          <button
+            type="submit"
+            disabled={createTask.isPending}
+            className="min-h-11 rounded border border-accent/40 px-4 text-sm text-accent hover:bg-accent/10 disabled:opacity-50 sm:min-h-0 sm:py-2"
+          >
+            Add
+          </button>
+        </div>
       </form>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
@@ -267,7 +277,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
           <button
             key={f.value}
             onClick={() => setStatusFilter(f.value)}
-            className={`rounded border px-2 py-1 transition-colors ${
+            className={`inline-flex min-h-11 items-center rounded border px-3 transition-colors sm:min-h-0 sm:px-2 sm:py-1 ${
               statusFilter === f.value
                 ? "border-accent/40 text-accent"
                 : "border-edge text-muted hover:text-fg"
@@ -281,7 +291,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
           onChange={(e) =>
             setPriorityFilter(e.target.value as TaskPriority | "all")
           }
-          className="ml-auto rounded border border-edge bg-panel-2 px-2 py-1 text-muted outline-none focus:border-accent"
+          className="min-h-11 w-full rounded border border-edge bg-panel-2 px-2 text-muted outline-none focus:border-accent sm:ml-auto sm:min-h-0 sm:w-auto sm:py-1"
           aria-label="Filter by priority"
         >
           <option value="all">Any priority</option>
