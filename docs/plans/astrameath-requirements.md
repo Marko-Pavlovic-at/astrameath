@@ -96,6 +96,35 @@ A dedicated tab (like Stats). [7]
 
 - A button to **reset app data** and a separate button to **reset AI data**. [16]
 
+## 8. Amendments (2026-07-14)
+
+Requested by Marko after living with the app. These **amend the requirements
+above**; the build order and the open decisions live in
+[mvp-to-launch.md](mvp-to-launch.md) § Stage 1.5.
+
+- **§1 Time is a property of the project, not only of the task.** Sessions must be
+  viewable, editable and creatable **directly on the project** — a task is now an
+  *optional* attachment to a session, not a requirement. Includes **importing
+  historical time from old apps** so totals cover the years before Astrameath.
+  **Imported time awards no XP** (decided 2026-07-14) — totals and stats count it,
+  the level does not.
+- **§2 Stats are colour-coded per RPG stat category** and carry deeper insight
+  (per-stat breakdown, trends, streaks). This **overrides the Phase 5 single-hue
+  decision**, which means the six stat colours must be redesigned into a
+  categorical palette that passes CVD/contrast — the colour is the requirement,
+  the current palette is not.
+- **§4/§5 The companions' regard is earned by progress.** Affection and respect
+  are **bound to XP** — the user's real gains (XP, levels, streaks) drive them, and
+  they drift when he slacks. The link runs **XP → bond**, never bond → XP: chatting
+  must never become an XP farm.
+- **§5 The AI knows the user, not just the app.** The profile gains an **optional**
+  personal description — age, weight, height, free-text about-me — and the
+  companion prompt sees it. Nothing is mandatory.
+- **§1 Capture is global.** "Add task" must be reachable from **every tab**, not
+  only from inside a project.
+- **§6 Mobile navigation is a hamburger menu in a top bar**, not a persistent
+  bottom bar.
+
 ---
 
 ## Post-MVP / deferred

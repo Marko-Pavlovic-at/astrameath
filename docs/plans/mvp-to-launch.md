@@ -104,7 +104,151 @@ not breakage. What shipped:
 
 ---
 
-## Stage 2 — Make the app deployable ("go public")
+## Stage 1.5 — Second MVP round (captured 2026-07-14)
+
+Marko's second pass of feature requests, from using the app. These land **before
+Phase 7 polish** — several of them (the nav, the stats colours) *are* design
+decisions Phase 7 would otherwise have to guess at.
+
+Listed in **suggested build order** (shell first, then schema, then AI/stats),
+not the order Marko said them in.
+
+### 1. Mobile bottom bar → hamburger menu at the top
+- [ ] Replace the persistent bottom nav (`nav.tsx:178`, `fixed inset-x-0
+      bottom-0 … md:hidden`) with a **top bar + hamburger (three lines)** — "how
+      many mobile sites solve this". Desktop sidebar is unchanged.
+- [ ] Menu opens as a sheet/drawer over the page; the level badge and running
+      timer need a home in the new top bar (today the Profile glyph doubles as
+      the level badge, and `timer-bar.tsx` is the mobile timer affordance).
+- **This probably kills the open bottom-bar flicker bug** (see
+  `.claude/memory/open-mobile-nav-flicker.md`): the bar still flickers on scroll
+  on Marko's real phone after the `dvh`→`svh` and `transform-gpu` fixes
+  (`e25a391`), and it is invisible to headless testing. A non-fixed top bar
+  removes the element that flickers. **Do not spend more time debugging the
+  flicker — this task supersedes it.** If a `fixed` top bar is chosen, re-test
+  for the same flicker before closing it out.
+- **Open decision:** does the top bar scroll away with the page (cheapest, and
+  the flicker cannot come back) or stay `fixed`/sticky (always-reachable menu)?
+
+### 2. "Add task" available everywhere, in every tab
+- [ ] A **global quick-add** reachable from every route (projects, calendar,
+      stats, profile, companions) — today a task can only be born inside a
+      project detail page.
+- [ ] Needs a project picker (default: last used), plus the fields worth having
+      at capture time — title, project, date. Everything else is editable later.
+- **Open decisions:**
+  - Affordance: FAB, a `+` in the nav/top bar, or a command-palette-style modal
+    on a keyboard shortcut. Recommend: **`+` in the top bar / sidebar** (one
+    affordance that exists at every width) opening the same modal a FAB would.
+  - Does it also accept a **project-less** capture (an inbox)? Today a task
+    *requires* a `project_id`, so an inbox means schema change. Recommend: no
+    inbox — force a project, keep the schema.
+
+### 3. Subtasks sit on top in the task panel
+- [ ] In the expanded task panel (`task-row.tsx`, `expanded` state) the subtask
+      checklist currently renders **last**, under notes / priority / estimate /
+      schedule / recurrence / sessions. Move it to the **top** — it is the part
+      you open the task for.
+- Pure reorder, no schema or data change.
+
+### 4. Time logic: log and edit time **on the project**, and import time from old apps
+Two changes, one schema migration.
+- [ ] **Edit time at the project level.** Today a session is always attached to
+      a task (`time_sessions.task_id` is `not null`) and can only be reached
+      through the task, so correcting a mis-tracked hour means hunting the task
+      down. Marko wants project time editable **directly on the project page**:
+      list the project's sessions, edit start/end/duration, delete, add.
+- [ ] **Add time from old apps** — backfill historical hours (from V1/"Ascendant"
+      and whatever else Marko tracked in) so the totals tell the whole story:
+      arbitrary past dates, entered against the project.
+- **Decided (2026-07-14): imported time awards NO XP.** Totals and stats include
+  it; the level stays a record of what was actually tracked inside Astrameath.
+  Implementation: a new `session_source` value `import`, and the XP trigger
+  (`20260703_xp_triggers.sql`, `after insert or update of ended_at on
+  time_sessions`) skips rows whose source is `import`. `manual` keeps awarding.
+- **Open decisions:**
+  - Schema shape for project-level time. Recommend: **`time_sessions.task_id`
+    becomes nullable + add `project_id not null`** (backfill `project_id` from
+    the task, keep it in sync). A session then always has a project and
+    *optionally* a task. Alternative — a per-project hidden "General" task —
+    keeps the schema but pollutes the task list; rejected unless the migration
+    proves ugly. Note `task_time_totals` / `project_time_totals`
+    (`20260702_time_total_views.sql`) both join through `task_id` and must be
+    rewritten either way.
+  - Which **stat** does task-less project time award XP to? The project's stat —
+    already how it works, and the project is exactly what we now hang the
+    session on. (Only relevant for `timer`/`manual`, not `import`.)
+  - Import UX: one row at a time, or a bulk/lump-sum entry ("120h on Health
+    before 2026-07-01")? A lump sum needs a synthetic date range and would
+    distort the per-day chart — recommend **one session per entry**, with a
+    quick repeat-entry form.
+
+### 5. More data in the profile; the AI can see it
+- [ ] Profile gains an optional **user description**: age, weight, height, and a
+      free-text "about me". **All optional**, all editable, none required.
+- [ ] These feed the **companion prompt** — the AI should know who it is talking
+      to (it already gets an app snapshot; this is the person snapshot). Build it
+      server-side into `src/lib/ai/snapshot.ts`, like everything else the AI sees.
+- **Open decisions:**
+  - Fixed columns on `profiles` (`age`/`birthdate`, `height_cm`, `weight_kg`) vs.
+    a single `about jsonb`. Recommend: **a few typed columns + one free-text
+    `bio`** — the typed ones are the ones a future feature (Vitality goals,
+    workout module) would actually compute with.
+  - Weight is a *changing* number. Storing one value is fine for the AI; a
+    weight **history** is a different feature (belongs with the deferred workout
+    module) — don't build it here.
+  - Privacy: this is real personal data going to Anthropic in every turn. Fine
+    while Marko is the sole user; it becomes a **privacy-policy line item** in
+    Stage 2 (§E) and should be listed there.
+
+### 6. Bind the companions' affection & respect to XP
+- **Decided (2026-07-14): the link runs XP → bond.** The companion's affection
+  and respect are driven by Marko's **actual progress** — XP gained, levels,
+  streaks — so the AI's regard is *earned* by the grind, and drifts when he
+  slacks. (The reverse direction — bonding for XP — was considered and rejected:
+  it turns chatting into an XP farm.)
+- [ ] Feed progress deltas since the companion's `last_seen_at` into the turn
+      (XP gained, levels crossed, tasks/sessions completed) and let them move
+      `companion_state.relationship.affection` / `.respect` — the existing
+      `update_state` tool already writes these axes.
+- **Open decisions:**
+  - **Deterministic or model-driven?** Two options: (a) the DB/server computes a
+    respect delta from XP and applies it, the model only narrates it; (b) the
+    progress numbers go in the prompt and the model decides the delta via
+    `update_state`. Recommend **(a) for respect** (it should be objective and
+    un-flatterable) and **(b) for affection** (it's a feeling — how he *talks* to
+    her should still matter more than his level).
+  - Interaction with the existing **absence decay** — decay on absence already
+    exists; "slacking while present" is new. Keep one decay path, not two.
+  - Per-companion or shared? State is per-companion by design (nothing is shared
+    between bots) — the *input* (his XP) is global, the *reaction* stays private
+    to each bot.
+
+### 7. Stats page: colour-coded per category + more insight
+- [ ] **Colour-code by stat category.** This **reverses a Phase 5 decision** — the
+      chart is single-hue (accent) today *on purpose*, because the six stat
+      colours in `src/lib/stats.ts` fail contrast/CVD checks as a categorical
+      palette (see AGENTS.md, Phase 5). Marko wants the colour anyway, so the
+      work is **not** "apply `STATS[stat].color`" — it is **design a categorical
+      palette for the six stats that actually passes CVD**, then apply it in the
+      chart, the distribution rows, and (for free) the project glyphs. Use the
+      `dataviz` skill for the palette + validator; the stat colours may need to
+      change everywhere, which is a Phase-7 theming question too.
+- [ ] **More insightful info.** Today: tracked total, avg/day, per-active-day,
+      active days, best day, per-day column chart, per-project distribution.
+      Candidates to add (pick with Marko — a couple, not all):
+  - **Per-stat breakdown** — time and XP per RPG stat, i.e. where the character
+    is actually being levelled vs. neglected. This is the one the colour-coding
+    is really asking for.
+  - **Trend vs. the previous period** ("+18% vs. last month") on the KPI tiles.
+  - **Streaks / consistency** — current and longest active-day streak; the
+    recurring-task completion rate (`task_completions` is already the data).
+  - **Time of day / day of week heatmap** — when Marko actually works.
+  - **Estimate vs. actual** — `tasks.estimate_minutes` is captured and never used.
+- **Open decision:** does the stats range filter also scope the new per-stat/XP
+  panels (recommend yes — one range control for the page, as today).
+
+---
 
 Committed next major stage after the MVP. **Work-in-public approach**: build it
 transparently (devlog, visible changelog, share progress). Marko described the
@@ -165,15 +309,22 @@ section expands it into the real scope. Full item-by-item detail (with the
 
 ---
 
-## Current status snapshot (updated 2026-07-13)
+## Current status snapshot (updated 2026-07-14)
+- **Stage 1.5 (second MVP round) is the current work** — seven tasks captured
+  2026-07-14 from Marko's use of the app, ordered above. Nothing started yet.
+  Two decisions are already made and must not be re-litigated: imported time
+  awards **no XP**, and the bond link runs **XP → affection/respect**, not the
+  other way.
+- Phase 7 polish now comes **after** Stage 1.5 (the nav and the stat palette are
+  design decisions Stage 1.5 settles).
 - **Stage 1 is COMPLETE.** All four tasks shipped:
   1. subtasks + progress bar — `3647cba`
   2. timer out of the corner — `ca4357a`
   3. calendar DnD on touch — resolved inside the design pass (date field is the
      touch path; drag copy is pointer-gated)
   4. mobile / design pass — audited at 375px and fixed; see above
-- **Next: Phase 7 polish** — theming pass, animations, PWA install. The
-  responsive audit that Phase 7 used to carry is done.
+- **After Stage 1.5: Phase 7 polish** — theming pass, animations, PWA install.
+  The responsive audit that Phase 7 used to carry is done.
 - Stage 2 (go public) — not started. Biggest financial risk stands: `/api/ai/*`
   has no per-user quota and the `ANTHROPIC_API_KEY` is shared.
 - Everything through Phase 6 + the 2026-07-05 testing-feedback pass is shipped

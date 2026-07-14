@@ -6,15 +6,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Astrameath
 
-Gamified life-tracker ("level up your life"), V2 rewrite of the habitflow/"Ascendant"
-app. **Completely separate entity from V1**: this is an orphan branch (`astrameath`)
-of the habitflow repo checked out as a git worktree; V1 lives on `main` at
-`../habitflow` and its Supabase project (`ftewcdmoojohaqphhubm`, "Ascendant") and
-Vercel project must NEVER be touched from here.
+Gamified life-tracker ("level up your life"), V2 rewrite of the "Ascendant" app
+(V1). Astrameath **is this repo's `main` branch** and lives in
+`~/personal/webdev/projects/astrameath` (renamed from `habitflow` on 2026-07-14;
+V1's branch, code and worktree are gone). Remote:
+`github.com/Marko-Pavlovic-at/astrameath` (private). V1 was a **completely
+separate entity** and its infra still exists: the Supabase project
+`ftewcdmoojohaqphhubm` ("Ascendant") and its Vercel project must NEVER be touched
+from here.
 
 Full specs: `docs/plans/astrameath-requirements.md` (what & why, decisions log) and
-`docs/plans/astrameath-plan.md` (schema, structure, phase plan). Read them before
-larger changes.
+`docs/plans/astrameath-plan.md` (schema, structure, phase plan). The **live roadmap
+is `docs/plans/mvp-to-launch.md`** — it sets the order (Stage 1.5 → Phase 7 →
+go-public). Read them before larger changes.
 
 ## Commands
 
@@ -99,7 +103,10 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
   functions; a session is attributed to its local start date); the key is in
   sessions.ts TIME_KEYS so timer mutations refresh it. Charts are single-hue
   (accent) by design — the six stat colors fail CVD checks as a categorical
-  palette; identity lives in row labels + stat glyphs.
+  palette; identity lives in row labels + stat glyphs. **Superseded 2026-07-14:**
+  Marko wants per-category color, so the six stat colors get redesigned into a
+  CVD-safe categorical palette (Stage 1.5 task 7) — the constraint stands, the
+  single-hue answer doesn't.
 - Phase 6 (AI companions) — done, verified end-to-end in browser against the
   real Claude API (create with avatar upload → chat → state deltas → memory
   compression → recall → both resets). Architecture carried from V1: one
@@ -126,7 +133,16 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
   (V1's Vercel copy is `sensitive`-type and unreadable; the working key came
   from V1's local `.env.local`). Verify a pulled env value is non-empty —
   `vercel env pull` writes empty values for sensitive vars without erroring.
-- Phase 7 next: game-UI polish (theming pass, animations, PWA install,
-  responsive audit). Post-MVP: Public Prep
-  (Stripe, AI quotas, open signup), community, module system. Details in the
-  plan doc.
+- **Stage 1.5 next (captured 2026-07-14, nothing started)** — second MVP round,
+  ordered in `docs/plans/mvp-to-launch.md`: (1) mobile bottom bar → hamburger top
+  bar [likely kills the open bottom-bar flicker bug — don't debug that separately],
+  (2) global "add task" on every tab, (3) subtasks to the top of the expanded task
+  panel, (4) time logged/edited **on the project** (`time_sessions.task_id` goes
+  nullable + `project_id`) plus import of old-app hours, (5) optional personal
+  profile data (age/height/weight/bio) fed to the AI snapshot, (6) companions'
+  affection/respect bound to XP, (7) stats color-coded per stat + deeper insight.
+  Two decisions are settled: **imported time awards no XP**, and the bond link runs
+  **XP → affection/respect, never the reverse** (no chat-farming).
+- Phase 7 after that: game-UI polish (theming pass, animations, PWA install).
+  Then go-public (Stripe, AI quotas, open signup, VPS, legal). Post-MVP:
+  community, module system. Details in the plan + roadmap docs.

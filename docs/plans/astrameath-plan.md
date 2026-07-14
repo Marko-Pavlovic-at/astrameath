@@ -5,9 +5,13 @@ Marko **before any code**.
 
 ## 0. Where the code lives
 
-**Orphan branch `astrameath`** in this repo (no shared history with V1's `main`, so the
-tree is a clean Next.js scaffold and V1 stays untouched on `main`). If it ever feels
-cramped we can split it into its own repo later — orphan history makes that trivial.
+> **Updated 2026-07-14.** Originally an orphan branch `astrameath` checked out as a
+> worktree of the habitflow repo, with V1 on `main`. That is **history**: since
+> 2026-07-10 Astrameath **is** `main` (V1's branch and code deleted, worktree removed),
+> the remote is `github.com/Marko-Pavlovic-at/astrameath` (private), and on 2026-07-14
+> the working copy was renamed `…/projects/habitflow` → **`…/projects/astrameath`**.
+> V1's Supabase project (`ftewcdmoojohaqphhubm`, "Ascendant") still exists and is still
+> never to be touched from here.
 
 New infra, created during Phase 1:
 - **Supabase project `astrameath`** (separate from V1's "Ascendant" project)
@@ -83,6 +87,32 @@ All tables have `id uuid pk default gen_random_uuid()`, `user_id uuid references
   so spending stays visible during testing. Post-MVP (Public Prep) this same ledger
   becomes the basis for enforced per-user quotas.
 
+### Schema amendments (2026-07-14) — Stage 1.5
+
+Shape of the migrations the second MVP round needs. Detail, rationale and the still-open
+decisions are in [mvp-to-launch.md](mvp-to-launch.md) § Stage 1.5; this is the schema view.
+
+- **`time_sessions` — a session belongs to a project, and *optionally* to a task.**
+  `task_id` becomes **nullable**; add `project_id not null` (backfilled from the task).
+  This is what makes time editable on the project page and lets old-app hours be
+  imported without inventing a task for them. Both time views
+  (`task_time_totals`, `project_time_totals`) currently join through `task_id` and
+  must be rewritten.
+- **`session_source` gains `import`.** The XP trigger (`20260703_xp_triggers.sql`)
+  must **skip `import` rows** — imported time counts in totals and stats but grants no
+  XP (decided). `timer` and `manual` keep their 1 XP/min.
+- **`profiles` gains an optional personal description** — a few typed columns
+  (`birthdate`/`age`, `height_cm`, `weight_kg`) plus free-text `bio`. All nullable.
+  Read by `src/lib/ai/snapshot.ts` so the companion knows who it is talking to.
+  A weight *history* is deliberately not modelled (that's the deferred workout module).
+- **No new table for the XP → bond link.** The companion's affection/respect react to
+  progress already recorded in `xp_events` + `companion_state.last_seen_at`; the deltas
+  are computed at read time (derive, don't persist) and applied through the existing
+  `update_state` tool. The link is one-directional: **XP moves the bond, the bond never
+  awards XP.**
+- **No `inbox`/project-less task.** `tasks.project_id` stays `not null`; the global
+  quick-add picks a project instead.
+
 ### Reset buttons [req 16]
 
 "Reset app data" = delete rows in domain tables; "Reset AI data" = delete rows in
@@ -138,6 +168,11 @@ Each phase ends with something usable and reviewed before the next starts.
    session + lifetime USD display in the UI**, both reset buttons.
 7. **Game-UI polish** — theming pass (Hollow Knight / Dark Souls / WuWa mood),
    animations, PWA install, responsive audit at 375/900/1200px (Playwright MCP).
+
+> **Ordering, as of 2026-07-14:** phases 1–6 shipped. Two rounds of MVP tasks came out
+> of real use and run **before** Phase 7 — Stage 1 (done) and Stage 1.5 (current) in
+> [mvp-to-launch.md](mvp-to-launch.md), which is the live roadmap. Phase 7 then inherits
+> a settled mobile nav and a settled stat palette instead of guessing at them.
 
 **Post-MVP: Public Prep** (not a numbered phase — happens only if/when Astrameath goes
 public): Stripe payments + subscriptions, enforced per-user AI quotas & rate limits on
