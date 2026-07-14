@@ -113,22 +113,29 @@ decisions Phase 7 would otherwise have to guess at.
 Listed in **suggested build order** (shell first, then schema, then AI/stats),
 not the order Marko said them in.
 
-### 1. Mobile bottom bar → hamburger menu at the top
-- [ ] Replace the persistent bottom nav (`nav.tsx:178`, `fixed inset-x-0
-      bottom-0 … md:hidden`) with a **top bar + hamburger (three lines)** — "how
-      many mobile sites solve this". Desktop sidebar is unchanged.
-- [ ] Menu opens as a sheet/drawer over the page; the level badge and running
-      timer need a home in the new top bar (today the Profile glyph doubles as
-      the level badge, and `timer-bar.tsx` is the mobile timer affordance).
-- **This probably kills the open bottom-bar flicker bug** (see
-  `.claude/memory/open-mobile-nav-flicker.md`): the bar still flickers on scroll
-  on Marko's real phone after the `dvh`→`svh` and `transform-gpu` fixes
-  (`e25a391`), and it is invisible to headless testing. A non-fixed top bar
-  removes the element that flickers. **Do not spend more time debugging the
-  flicker — this task supersedes it.** If a `fixed` top bar is chosen, re-test
-  for the same flicker before closing it out.
-- **Open decision:** does the top bar scroll away with the page (cheapest, and
-  the flicker cannot come back) or stay `fixed`/sticky (always-reachable menu)?
+### 1. Mobile bottom bar → hamburger menu at the top — DONE (3866e39)
+- [x] The bottom nav is gone. Mobile now gets a **`sticky top-0` bar**: hamburger
+      (three lines) → level badge, with a slide-in drawer holding the five nav
+      links, the level/XP card and Sign out. Desktop sidebar untouched.
+- [x] **Resolved the open decision** in favour of sticky, not scroll-away: the
+      flicker is a *bottom*-anchored phenomenon (the browser must reposition the
+      element every frame as the URL bar collapses), and the top of the viewport
+      doesn't move — so a sticky top bar keeps the menu always reachable without
+      re-opening the bug.
+- [x] **The floating timer bar went with it.** It was the *second* bottom-anchored
+      fixed element and would have kept flickering on its own, so it folds into
+      the top bar as a compact chip (clock links to the project, ■ stops it);
+      `timer-bar.tsx` is deleted. **Nothing on mobile is pinned to the viewport
+      bottom any more** — asserted on every route by the verification script.
+- [x] Drawer state is keyed to the pathname, not a boolean — otherwise the back
+      button restored it open (it did, first try), and closing it from an effect
+      is banned by the lint config.
+- Verified in Chromium at 375px with `pointer: coarse` forced over CDP (31 checks:
+  drawer open/close by hamburger, backdrop, Escape and navigation; body-scroll
+  lock; ≥44px targets; inert when closed; desktop unchanged at 1280px).
+- **STILL NEEDS MARKO ON A REAL PHONE:** headless Chromium never moves a URL bar,
+  so the flicker itself cannot be confirmed dead here (see
+  `.claude/memory/open-mobile-nav-flicker.md`). Ask him to scroll around.
 
 ### 2. "Add task" available everywhere, in every tab
 - [ ] A **global quick-add** reachable from every route (projects, calendar,

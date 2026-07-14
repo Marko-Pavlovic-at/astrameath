@@ -7,13 +7,18 @@ metadata:
   originSessionId: 8191b2a7-fb08-4661-b9b8-6364dad9a87a
 ---
 
-**SUPERSEDED 2026-07-14 — do not chase this bug on its own.** Marko asked for the
-mobile bottom bar to become a **hamburger menu in a top bar** (Stage 1.5 task 1 in
-`docs/plans/mvp-to-launch.md`), which removes the fixed bottom nav entirely. Expect the
-flicker to die with it. Keep this memory only as the **acceptance test** for that task:
-if the new top bar is `fixed`/sticky, ask Marko to scroll on his real phone before
-calling it done — the bug is invisible to headless Chromium, so only he can confirm.
-Details below stand as the record of what was already tried.
+**FIX SHIPPED 2026-07-14 (`3866e39`), AWAITING MARKO'S PHONE.** The mobile bottom nav
+became a `sticky top-0` hamburger bar, and the floating timer bar folded into it
+(`timer-bar.tsx` deleted) — so **no element on mobile is anchored to the viewport bottom
+any anymore**, which is the entire mechanism of this bug (the browser repositions
+bottom-fixed elements every frame as the URL bar slides; the top edge doesn't move).
+A Playwright check now asserts "nothing fixed and flush with the viewport bottom" on
+every route.
+
+**The one thing that can't be verified here:** headless Chromium never moves a URL bar,
+so only Marko can confirm the flicker is actually gone. **Ask him to scroll around on his
+phone; if it's clean, delete this memory.** Do not re-open the old debugging paths below —
+they applied to an element that no longer exists.
 
 **Open bug, not fixed.** The fixed mobile bottom bars (`nav.tsx` bottom nav, and
 `timer-bar.tsx` when a timer runs) **still flicker / lag behind the scroll on
