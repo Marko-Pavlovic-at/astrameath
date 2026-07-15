@@ -273,7 +273,9 @@ export default function StatsView() {
                   <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
                     {row.streak.current > 0 ? (
                       <span>
-                        <span aria-hidden>🔥</span>{" "}
+                        <span aria-hidden className="inline-block animate-flicker">
+                          🔥
+                        </span>{" "}
                         <span className="text-fg">{row.streak.current}d</span>{" "}
                         streak
                       </span>

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cinzel, Geist, Geist_Mono } from "next/font/google";
+import PwaRegister from "@/components/pwa-register";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -26,6 +27,12 @@ export const metadata: Metadata = {
     template: "%s — Astrameath",
   },
   description: "Level up your life.",
+  applicationName: "Astrameath",
+  appleWebApp: {
+    capable: true,
+    title: "Astrameath",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
@@ -46,6 +53,7 @@ export default function RootLayout({
       {/* svh, not dvh: dvh changes as the mobile URL bar slides, relaying out
           the page mid-scroll and dragging the fixed bottom bars with it */}
       <body className="min-h-svh bg-bg font-sans text-fg">
+        <PwaRegister />
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import CompanionSidebar from "@/components/companions/companion-sidebar";
 import Nav from "@/components/nav";
 import ThemeApplier from "@/components/theme-applier";
+import XpCelebration from "@/components/xp-celebration";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -21,6 +22,7 @@ export default async function AppLayout({
   return (
     <div className="min-h-svh md:flex">
       <ThemeApplier />
+      <XpCelebration />
       <Nav />
       {/* No bottom padding to reserve: mobile nav and timer both live in the
           sticky top bar now, so nothing overlaps the end of the page. */}
