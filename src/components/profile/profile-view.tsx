@@ -65,7 +65,7 @@ export default function ProfileView() {
       {/* character sheet: identity, level and person fused into one card */}
       <div className="rounded-lg border border-edge bg-panel p-5">
         <div className="flex items-center gap-4 sm:gap-5">
-          <div className="flex size-16 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50 bg-panel-2 sm:size-20">
+          <div className="glow flex size-16 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50 bg-panel-2 sm:size-20">
             <span className="text-[9px] uppercase tracking-widest text-muted sm:text-[10px]">
               Lv
             </span>
@@ -134,7 +134,7 @@ export default function ProfileView() {
           const info = statLevels[s];
           const pct = Math.round((info.intoLevel / info.toNext) * 100);
           return (
-            <div key={s} className="rounded-lg border border-edge bg-panel p-3">
+            <div key={s} className="lift rounded-lg border border-edge bg-panel p-3">
               <p className="flex items-baseline justify-between text-sm">
                 <span style={{ color: STATS[s].color }}>
                   {STATS[s].glyph} {STATS[s].label}

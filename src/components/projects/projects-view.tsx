@@ -103,7 +103,8 @@ export default function ProjectsView() {
             <li key={p.id}>
               <Link
                 href={`/projects/${p.id}`}
-                className="block rounded-lg border border-edge bg-panel p-4 transition-colors hover:border-accent/40"
+                style={{ borderLeftColor: STATS[p.stat].color }}
+                className="lift block rounded-lg border border-l-2 border-edge bg-panel p-4"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{p.name}</span>

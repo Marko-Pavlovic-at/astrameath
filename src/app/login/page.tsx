@@ -34,8 +34,11 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-svh items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-center text-3xl font-light uppercase tracking-[0.35em] text-accent">
+      <div className="w-full max-w-sm animate-fade-up">
+        <h1
+          style={{ textShadow: "0 0 28px rgba(127, 212, 228, 0.45)" }}
+          className="font-display text-center text-3xl uppercase tracking-[0.25em] text-accent"
+        >
           Astrameath
         </h1>
         <p className="mt-2 text-center text-sm text-muted">
@@ -44,7 +47,7 @@ export default function LoginPage() {
 
         <form
           onSubmit={onSubmit}
-          className="mt-10 space-y-4 rounded-lg border border-edge bg-panel p-6"
+          className="mt-10 space-y-4 rounded-lg border border-edge bg-panel p-6 shadow-[0_0_40px_-12px_rgba(127,212,228,0.25)]"
         >
           <label className="block">
             <span className="mb-1 block text-xs uppercase tracking-wider text-muted">

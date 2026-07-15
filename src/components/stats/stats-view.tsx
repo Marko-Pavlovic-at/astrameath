@@ -230,7 +230,7 @@ export default function StatsView() {
               return (
                 <li
                   key={row.projectId ?? "archived"}
-                  className="rounded-lg border border-edge bg-panel p-3"
+                  className="lift rounded-lg border border-edge bg-panel p-3"
                 >
                   <div className="flex items-baseline justify-between gap-3">
                     {project ? (

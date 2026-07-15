@@ -144,7 +144,7 @@ function TopBarTimer({ session }: { session: ActiveSession }) {
 /** The level badge that both the top bar and the drawer link to /profile with. */
 function LevelBadge({ level }: { level: number }) {
   return (
-    <span className="flex size-9 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50">
+    <span className="glow flex size-9 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50">
       <span className="text-[7px] uppercase leading-none tracking-widest text-muted">
         Lv
       </span>
@@ -216,7 +216,7 @@ function MobileNav({
 
         {/* The wordmark yields to the timer — at 375px both don't fit. */}
         {!session && (
-          <span className="text-xs font-light uppercase tracking-[0.3em] text-accent">
+          <span className="font-display text-xs uppercase tracking-[0.2em] text-accent">
             Astrameath
           </span>
         )}
@@ -269,7 +269,7 @@ function MobileNav({
           }`}
         >
           <div className="flex h-14 items-center justify-between border-b border-edge px-4">
-            <span className="text-sm font-light uppercase tracking-[0.3em] text-accent">
+            <span className="font-display text-sm uppercase tracking-[0.2em] text-accent">
               Astrameath
             </span>
             <button
@@ -363,7 +363,7 @@ export default function Nav() {
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-56 flex-col border-r border-edge bg-panel md:flex">
         <div className="px-5 py-6">
-          <span className="text-sm font-light uppercase tracking-[0.3em] text-accent">
+          <span className="font-display text-sm uppercase tracking-[0.2em] text-accent">
             Astrameath
           </span>
         </div>
@@ -391,7 +391,7 @@ export default function Nav() {
             href="/profile"
             className="mx-3 mb-2 flex items-center gap-4 rounded-lg border border-edge bg-panel-2 px-4 py-3 transition-colors hover:border-accent/40"
           >
-            <span className="flex size-14 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50">
+            <span className="glow flex size-14 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50">
               <span className="text-[9px] uppercase tracking-widest text-muted">
                 Lv
               </span>
