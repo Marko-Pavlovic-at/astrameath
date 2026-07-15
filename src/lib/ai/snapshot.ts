@@ -27,6 +27,137 @@ function localMidnightUtc(dateStr: string, tzOffsetMinutes: number): Date {
   return new Date(Date.UTC(y, m - 1, d) - tzOffsetMinutes * 60_000);
 }
 
+/** Whole years between a "YYYY-MM-DD" birthdate and now. */
+function ageFromBirthdate(birthdate: string, now: Date): number | null {
+  const [y, m, d] = birthdate.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  let age = now.getUTCFullYear() - y;
+  const beforeBirthday =
+    now.getUTCMonth() + 1 < m ||
+    (now.getUTCMonth() + 1 === m && now.getUTCDate() < d);
+  if (beforeBirthday) age -= 1;
+  return age >= 0 && age < 150 ? age : null;
+}
+
+/**
+ * The "person snapshot": the optional real-world facts the user chose to share
+ * about themselves (age, height, weight, a short bio) so the companion knows who
+ * it is talking to — the counterpart to the app snapshot. Empty string when the
+ * user has filled in nothing, so the block simply drops out of the prompt.
+ */
+export function buildPersonBlock(
+  profile: {
+    display_name: string | null;
+    birthdate: string | null;
+    height_cm: number | null;
+    weight_kg: number | null;
+    bio: string | null;
+  },
+  now: Date
+): string {
+  const facts: string[] = [];
+  if (profile.birthdate) {
+    const age = ageFromBirthdate(profile.birthdate, now);
+    if (age !== null) facts.push(`${age} years old`);
+  }
+  if (profile.height_cm) facts.push(`${profile.height_cm} cm tall`);
+  if (profile.weight_kg) facts.push(`${profile.weight_kg} kg`);
+
+  const lines: string[] = [];
+  if (facts.length > 0) lines.push(`- ${facts.join(", ")}`);
+  if (profile.bio?.trim()) lines.push(`- ${profile.bio.trim()}`);
+  if (lines.length === 0) return "";
+
+  const who = profile.display_name || "them";
+  return `═══ Who you're talking to ═══\nWhat you know about ${who} as a person — they chose to share this with you, so treat it as something you simply know, not a file to read back:\n${lines.join(
+    "\n"
+  )}`;
+}
+
+function humanJoin(parts: string[]): string {
+  if (parts.length <= 1) return parts.join("");
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+
+/**
+ * Progress the user made between chats, read from the XP ledger — the input that
+ * lets the companion's regard track real effort (task 6). Returns both a prompt
+ * block (so the model can narrate and let it move affection) and the raw XP
+ * gained (so the server can move respect deterministically). Empty for micro-gaps
+ * within a single sitting, so it doesn't nag "since we last spoke" every message.
+ */
+export async function buildProgressSince(
+  supabase: Supabase,
+  since: string | null,
+  now: Date
+): Promise<{ block: string; xpGained: number }> {
+  if (!since) return { block: "", xpGained: 0 };
+  if (now.getTime() - new Date(since).getTime() < 30 * 60_000) {
+    return { block: "", xpGained: 0 };
+  }
+
+  const [eventsRes, totalsRes] = await Promise.all([
+    supabase.from("xp_events").select("amount, stat, source").gt("created_at", since),
+    supabase.from("xp_totals").select("stat, total_xp"),
+  ]);
+  const events = eventsRes.data ?? [];
+  if (events.length === 0) return { block: "", xpGained: 0 };
+
+  const xpGained = events.reduce((a, e) => a + Number(e.amount), 0);
+  const minutes = events
+    .filter((e) => e.source === "time")
+    .reduce((a, e) => a + Number(e.amount), 0);
+  const tasks = events.filter((e) => e.source === "task_completion").length;
+  const milestones = events.filter((e) => e.source === "milestone").length;
+  const goals = events.filter((e) => e.source === "goal").length;
+
+  // Levels crossed: general level now vs. before this window's gains.
+  const gainByStat = Object.fromEntries(STAT_ORDER.map((s) => [s, 0])) as Record<
+    StatKind,
+    number
+  >;
+  for (const e of events) {
+    if (e.stat) gainByStat[e.stat] += Number(e.amount);
+  }
+  const currentByStat = Object.fromEntries(
+    STAT_ORDER.map((s) => [s, 0])
+  ) as Record<StatKind, number>;
+  for (const r of totalsRes.data ?? []) {
+    if (r.stat) currentByStat[r.stat] = Number(r.total_xp ?? 0);
+  }
+  const levelsFrom = (by: Record<StatKind, number>) =>
+    generalLevel(
+      Object.fromEntries(
+        STAT_ORDER.map((s) => [s, levelFromXp(by[s])])
+      ) as Record<StatKind, LevelInfo>
+    );
+  const levelNow = levelsFrom(currentByStat);
+  const levelBefore = levelsFrom(
+    Object.fromEntries(
+      STAT_ORDER.map((s) => [s, Math.max(0, currentByStat[s] - gainByStat[s])])
+    ) as Record<StatKind, number>
+  );
+  const levelsCrossed = Math.max(0, levelNow - levelBefore);
+
+  const parts = [`earned ${xpGained.toLocaleString()} XP`];
+  if (minutes > 0) parts.push(`trained ${formatDuration(minutes * 60)}`);
+  if (tasks > 0) parts.push(`finished ${tasks} task${tasks === 1 ? "" : "s"}`);
+  if (milestones > 0)
+    parts.push(`hit ${milestones} milestone${milestones === 1 ? "" : "s"}`);
+  if (goals > 0) parts.push(`reached ${goals} goal${goals === 1 ? "" : "s"}`);
+  const levelLine =
+    levelsCrossed > 0
+      ? ` They leveled up ${levelsCrossed} time${
+          levelsCrossed === 1 ? "" : "s"
+        } — now general level ${levelNow}.`
+      : "";
+
+  const block = `═══ Since you last spoke ═══\nWhile you were apart they ${humanJoin(
+    parts
+  )}.${levelLine} This is real effort they put in on their own; let it colour how you feel about them — but react as yourself, don't recite it back like a scoreboard.`;
+  return { block, xpGained };
+}
+
 /**
  * The companion's only window into the app (it has no tool access): a compact
  * formatted summary built server-side from the same tables the UI reads —

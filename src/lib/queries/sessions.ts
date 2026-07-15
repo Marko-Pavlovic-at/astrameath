@@ -11,21 +11,23 @@ export type ActiveSession = TimeSession & {
   tasks: { title: string; project_id: string } | null;
 };
 
+/** A finished session with its task title (null for task-less project-level time). */
+export type ProjectSession = TimeSession & { tasks: { title: string } | null };
+
+// Prefix keys — invalidateQueries matches by prefix, so ["task-sessions"] clears
+// every per-task list and ["project-sessions"] every per-project list at once.
 const TIME_KEYS = [
   ["active-session"],
   ["task-time"],
   ["project-time"],
   ["stats-sessions"],
   ["xp"],
+  ["task-sessions"],
+  ["project-sessions"],
 ];
 
-function invalidateTime(
-  queryClient: ReturnType<typeof useQueryClient>,
-  taskId?: string
-) {
+function invalidateTime(queryClient: ReturnType<typeof useQueryClient>) {
   for (const key of TIME_KEYS) queryClient.invalidateQueries({ queryKey: key });
-  if (taskId)
-    queryClient.invalidateQueries({ queryKey: ["task-sessions", taskId] });
 }
 
 export function useActiveSession() {
@@ -63,8 +65,8 @@ export function useStartTimer() {
         .eq("id", taskId)
         .eq("status", "todo");
     },
-    onSuccess: (_data, taskId) => {
-      invalidateTime(queryClient, taskId);
+    onSuccess: () => {
+      invalidateTime(queryClient);
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
@@ -127,6 +129,94 @@ export function useTaskSessions(taskId: string, enabled: boolean) {
   });
 }
 
+/** All finished sessions for a project — timer, manual and imported, task or not. */
+export function useProjectSessions(projectId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["project-sessions", projectId],
+    enabled,
+    queryFn: async (): Promise<ProjectSession[]> => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("time_sessions")
+        .select("*, tasks(title)")
+        .eq("project_id", projectId)
+        .not("ended_at", "is", null)
+        .order("started_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/**
+ * Adds a session directly against a project (no task). `source: "import"` backfills
+ * historical hours from old apps — those never award XP (the DB trigger skips them);
+ * `source: "manual"` is normal logged time and does award XP to the project's stat.
+ */
+export function useAddProjectSession(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      minutes,
+      date,
+      note,
+      source,
+    }: {
+      minutes: number;
+      date: string; // yyyy-mm-dd
+      note?: string;
+      source: "manual" | "import";
+    }) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const end = date === today ? new Date() : new Date(`${date}T12:00:00`);
+      const start = new Date(end.getTime() - minutes * 60_000);
+
+      const supabase = createClient();
+      const { error } = await supabase.from("time_sessions").insert({
+        project_id: projectId,
+        task_id: null,
+        source,
+        started_at: start.toISOString(),
+        ended_at: end.toISOString(),
+        note: note || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateTime(queryClient),
+  });
+}
+
+/** Edits a finished session's times/note. Changing the duration re-derives its XP. */
+export function useUpdateSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      started_at,
+      ended_at,
+      note,
+    }: {
+      id: string;
+      started_at?: string;
+      ended_at?: string;
+      note?: string | null;
+    }) => {
+      const supabase = createClient();
+      const patch: Partial<TimeSession> = {};
+      if (started_at !== undefined) patch.started_at = started_at;
+      if (ended_at !== undefined) patch.ended_at = ended_at;
+      if (note !== undefined) patch.note = note;
+      const { error } = await supabase
+        .from("time_sessions")
+        .update(patch)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateTime(queryClient),
+  });
+}
+
 export function useAddManualSession(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -155,11 +245,11 @@ export function useAddManualSession(taskId: string) {
       });
       if (error) throw error;
     },
-    onSuccess: () => invalidateTime(queryClient, taskId),
+    onSuccess: () => invalidateTime(queryClient),
   });
 }
 
-export function useDeleteSession(taskId: string) {
+export function useDeleteSession() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (sessionId: string) => {
@@ -170,6 +260,6 @@ export function useDeleteSession(taskId: string) {
         .eq("id", sessionId);
       if (error) throw error;
     },
-    onSuccess: () => invalidateTime(queryClient, taskId),
+    onSuccess: () => invalidateTime(queryClient),
   });
 }

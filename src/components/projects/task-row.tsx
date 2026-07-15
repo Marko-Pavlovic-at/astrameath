@@ -97,7 +97,7 @@ export default function TaskRow({
   const [manualDate, setManualDate] = useState(todayStr());
   const [manualNote, setManualNote] = useState("");
   const addManual = useAddManualSession(task.id);
-  const deleteSession = useDeleteSession(task.id);
+  const deleteSession = useDeleteSession();
   const { data: sessions } = useTaskSessions(task.id, expanded);
 
   const done = task.status === "done";
@@ -270,6 +270,59 @@ export default function TaskRow({
 
       {expanded && (
         <div className="space-y-4 border-t border-edge p-3">
+          {/* Subtasks lead the panel — the checklist is what you open a task for. */}
+          <div className="space-y-2">
+            <h3 className="text-xs uppercase tracking-widest text-muted">
+              Subtasks
+            </h3>
+            {subtasks.map((s) => {
+              const sDone = s.completed_at !== null;
+              return (
+                <div key={s.id} className="flex items-center gap-1 sm:gap-3">
+                  <label className="-m-1 flex shrink-0 cursor-pointer items-center p-2.5 sm:p-1.5">
+                    <input
+                      type="checkbox"
+                      checked={sDone}
+                      onChange={() =>
+                        setSubtaskCompleted.mutate({ id: s.id, completed: !sDone })
+                      }
+                      className="size-5 accent-[#7fd4e4] sm:size-3.5"
+                      aria-label={
+                        sDone ? "Mark subtask not done" : "Mark subtask done"
+                      }
+                    />
+                  </label>
+                  <span
+                    className={`min-w-0 flex-1 text-sm ${sDone ? "text-muted line-through" : ""}`}
+                  >
+                    {s.title}
+                  </span>
+                  <button
+                    onClick={() => deleteSubtask.mutate(s.id)}
+                    className="-m-1 flex size-10 shrink-0 items-center justify-center text-xs text-danger/60 hover:text-danger sm:size-6"
+                    aria-label="Delete subtask"
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
+            <form onSubmit={addSubtask} className="flex flex-wrap gap-2 pt-1">
+              <input
+                value={newSubtask}
+                onChange={(e) => setNewSubtask(e.target.value)}
+                placeholder="Subtask…"
+                className="min-w-32 flex-1 rounded border border-edge bg-panel-2 px-2 py-1.5 text-fg outline-none focus:border-accent"
+              />
+              <button
+                type="submit"
+                className="rounded border border-edge px-3 py-1.5 text-sm text-muted hover:text-fg"
+              >
+                + Add
+              </button>
+            </form>
+          </div>
+
           <form onSubmit={saveEdit} className="space-y-2">
             <input
               value={title}
@@ -383,58 +436,6 @@ export default function TaskRow({
               </button>
             </div>
           </form>
-
-          <div className="space-y-2">
-            <h3 className="text-xs uppercase tracking-widest text-muted">
-              Subtasks
-            </h3>
-            {subtasks.map((s) => {
-              const sDone = s.completed_at !== null;
-              return (
-                <div key={s.id} className="flex items-center gap-1 sm:gap-3">
-                  <label className="-m-1 flex shrink-0 cursor-pointer items-center p-2.5 sm:p-1.5">
-                    <input
-                      type="checkbox"
-                      checked={sDone}
-                      onChange={() =>
-                        setSubtaskCompleted.mutate({ id: s.id, completed: !sDone })
-                      }
-                      className="size-5 accent-[#7fd4e4] sm:size-3.5"
-                      aria-label={
-                        sDone ? "Mark subtask not done" : "Mark subtask done"
-                      }
-                    />
-                  </label>
-                  <span
-                    className={`min-w-0 flex-1 text-sm ${sDone ? "text-muted line-through" : ""}`}
-                  >
-                    {s.title}
-                  </span>
-                  <button
-                    onClick={() => deleteSubtask.mutate(s.id)}
-                    className="-m-1 flex size-10 shrink-0 items-center justify-center text-xs text-danger/60 hover:text-danger sm:size-6"
-                    aria-label="Delete subtask"
-                  >
-                    ✕
-                  </button>
-                </div>
-              );
-            })}
-            <form onSubmit={addSubtask} className="flex flex-wrap gap-2 pt-1">
-              <input
-                value={newSubtask}
-                onChange={(e) => setNewSubtask(e.target.value)}
-                placeholder="Subtask…"
-                className="min-w-32 flex-1 rounded border border-edge bg-panel-2 px-2 py-1.5 text-fg outline-none focus:border-accent"
-              />
-              <button
-                type="submit"
-                className="rounded border border-edge px-3 py-1.5 text-sm text-muted hover:text-fg"
-              >
-                + Add
-              </button>
-            </form>
-          </div>
 
           <form onSubmit={addManualTime} className="flex flex-wrap gap-2">
             <input

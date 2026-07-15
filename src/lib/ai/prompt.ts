@@ -25,6 +25,7 @@ export function buildSystemBlocks(args: {
   recentEvents: string[];
   memories: string[];
   snapshot: string;
+  person: string;
   temporal: string;
 }): Anthropic.TextBlockParam[] {
   const {
@@ -37,6 +38,7 @@ export function buildSystemBlocks(args: {
     recentEvents,
     memories,
     snapshot,
+    person,
     temporal,
   } = args;
   const who = userName || "the user";
@@ -100,6 +102,7 @@ export function buildSystemBlocks(args: {
 
   const dynamic = [
     temporal,
+    person,
     describeRelationship(relationship, who),
     moodLine,
     snapshot,

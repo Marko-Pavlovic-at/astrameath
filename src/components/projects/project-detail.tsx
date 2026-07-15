@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import GoalsSection from "@/components/projects/goals-section";
+import ProjectTimePanel from "@/components/projects/project-time-panel";
 import TaskRow from "@/components/projects/task-row";
 import { todayStr } from "@/lib/dates";
 import { useCompletions } from "@/lib/queries/calendar";
@@ -325,6 +326,8 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
             : "No tasks yet — add the first one above."}
         </p>
       )}
+
+      <ProjectTimePanel projectId={projectId} />
     </section>
   );
 }

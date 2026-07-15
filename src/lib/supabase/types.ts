@@ -280,28 +280,40 @@ export type Database = {
           active_theme: string | null
           active_title: string | null
           avatar_url: string | null
+          bio: string | null
+          birthdate: string | null
           created_at: string
           display_name: string | null
+          height_cm: number | null
           id: string
           last_seen_at: string | null
+          weight_kg: number | null
         }
         Insert: {
           active_theme?: string | null
           active_title?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          birthdate?: string | null
           created_at?: string
           display_name?: string | null
+          height_cm?: number | null
           id: string
           last_seen_at?: string | null
+          weight_kg?: number | null
         }
         Update: {
           active_theme?: string | null
           active_title?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          birthdate?: string | null
           created_at?: string
           display_name?: string | null
+          height_cm?: number | null
           id?: string
           last_seen_at?: string | null
+          weight_kg?: number | null
         }
         Relationships: []
       }
@@ -482,9 +494,10 @@ export type Database = {
           ended_at: string | null
           id: string
           note: string | null
+          project_id: string
           source: Database["public"]["Enums"]["session_source"]
           started_at: string
-          task_id: string
+          task_id: string | null
           user_id: string
         }
         Insert: {
@@ -492,9 +505,10 @@ export type Database = {
           ended_at?: string | null
           id?: string
           note?: string | null
+          project_id?: string
           source?: Database["public"]["Enums"]["session_source"]
           started_at?: string
-          task_id: string
+          task_id?: string | null
           user_id?: string
         }
         Update: {
@@ -502,12 +516,20 @@ export type Database = {
           ended_at?: string | null
           id?: string
           note?: string | null
+          project_id?: string
           source?: Database["public"]["Enums"]["session_source"]
           started_at?: string
-          task_id?: string
+          task_id?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "time_sessions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "time_sessions_task_id_fkey"
             columns: ["task_id"]
@@ -581,7 +603,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tasks_project_id_fkey"
+            foreignKeyName: "time_sessions_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -629,7 +651,7 @@ export type Database = {
     }
     Enums: {
       message_role: "user" | "assistant"
-      session_source: "timer" | "manual"
+      session_source: "timer" | "manual" | "import"
       stat_kind:
         | "strength"
         | "vitality"
@@ -769,7 +791,7 @@ export const Constants = {
   public: {
     Enums: {
       message_role: ["user", "assistant"],
-      session_source: ["timer", "manual"],
+      session_source: ["timer", "manual", "import"],
       stat_kind: [
         "strength",
         "vitality",

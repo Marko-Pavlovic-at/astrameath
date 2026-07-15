@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AboutYou from "@/components/profile/about-you";
 import DangerZone from "@/components/profile/danger-zone";
 import { useProfile, useUpdateProfile } from "@/lib/queries/profile";
 import { useXpTotals } from "@/lib/queries/xp";
@@ -228,6 +229,8 @@ export default function ProfileView() {
           </ul>
         </div>
       ))}
+
+      <AboutYou />
 
       <DangerZone />
     </section>

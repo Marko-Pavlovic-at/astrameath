@@ -11,10 +11,15 @@ import {
 import {
   applyAbsenceDecay,
   applyDeltas,
+  applyRespectGain,
   parseRelationship,
 } from "@/lib/ai/state";
 import { parseStateUpdate, updateStateTool } from "@/lib/ai/tools";
-import { buildAppSnapshot } from "@/lib/ai/snapshot";
+import {
+  buildAppSnapshot,
+  buildPersonBlock,
+  buildProgressSince,
+} from "@/lib/ai/snapshot";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 
@@ -84,7 +89,10 @@ export async function POST(req: Request) {
         .eq("companion_id", companionId)
         .order("created_at", { ascending: false })
         .limit(HISTORY_LIMIT),
-      supabase.from("profiles").select("display_name").single(),
+      supabase
+        .from("profiles")
+        .select("display_name, birthdate, height_cm, weight_kg, bio")
+        .single(),
     ]);
 
   if (companionRes.error || !companionRes.data) {
@@ -115,7 +123,15 @@ export async function POST(req: Request) {
   const lastUserMessageAt =
     historyRes.data?.find((m) => m.role === "user")?.created_at ?? null;
 
-  const snapshot = await buildAppSnapshot(supabase, userName, now, tzOffsetMinutes);
+  const [appSnapshot, progress] = await Promise.all([
+    buildAppSnapshot(supabase, userName, now, tzOffsetMinutes),
+    buildProgressSince(supabase, stateRow?.last_seen_at ?? null, now),
+  ]);
+  // Progress-since-last-chat leads the app standing when there is any.
+  const snapshot = progress.block
+    ? `${progress.block}\n\n${appSnapshot}`
+    : appSnapshot;
+  const person = profileRes.data ? buildPersonBlock(profileRes.data, now) : "";
 
   const system = buildSystemBlocks({
     charName: companion.name,
@@ -127,6 +143,7 @@ export async function POST(req: Request) {
     recentEvents,
     memories: (memoriesRes.data ?? []).map((m) => m.content),
     snapshot,
+    person,
     temporal: buildTemporalBlock({
       now,
       tzOffsetMinutes,
@@ -169,7 +186,12 @@ export async function POST(req: Request) {
             : null;
 
         // ── Persist the turn ────────────────────────────────────────────────
-        const newRel = update ? applyDeltas(relationship, update) : relationship;
+        // Respect is server-owned (earned by XP, not by conversation): drop the
+        // model's respect_delta, then apply the deterministic XP-driven gain.
+        const modelRel = update
+          ? applyDeltas(relationship, { ...update, respect_delta: 0 })
+          : relationship;
+        const newRel = applyRespectGain(modelRel, progress.xpGained);
         const newEvents = update?.reasoning
           ? [...recentEvents, update.reasoning].slice(-RECENT_EVENTS_CAP)
           : recentEvents;

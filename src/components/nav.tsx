@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import QuickAddTask from "@/components/quick-add-task";
 import {
   useActiveSession,
   useStopTimer,
@@ -162,9 +163,11 @@ function LevelBadge({ level }: { level: number }) {
 function MobileNav({
   summary,
   onSignOut,
+  onAddTask,
 }: {
   summary: ReturnType<typeof useLevelSummary>;
   onSignOut: () => void;
+  onAddTask: () => void;
 }) {
   const pathname = usePathname();
   const session = useRunningSession();
@@ -220,6 +223,13 @@ function MobileNav({
 
         <div className="ml-auto flex items-center gap-2">
           {session && <TopBarTimer session={session} />}
+          <button
+            onClick={onAddTask}
+            aria-label="Add task"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded border border-edge text-xl leading-none text-accent transition-colors active:bg-panel-2"
+          >
+            +
+          </button>
           {summary && (
             <Link href="/profile" aria-label={`Profile — level ${summary.level}`}>
               <LevelBadge level={summary.level} />
@@ -339,6 +349,7 @@ export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const summary = useLevelSummary();
+  const [addOpen, setAddOpen] = useState(false);
 
   async function signOut() {
     const supabase = createClient();
@@ -351,10 +362,21 @@ export default function Nav() {
     <>
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-56 flex-col border-r border-edge bg-panel md:flex">
-        <div className="px-5 py-6">
+        <div className="px-5 pb-4 pt-6">
           <span className="text-sm font-light uppercase tracking-[0.3em] text-accent">
             Astrameath
           </span>
+        </div>
+        <div className="px-3 pb-2">
+          <button
+            onClick={() => setAddOpen(true)}
+            className="flex w-full items-center gap-2 rounded border border-edge px-3 py-2 text-sm text-muted transition-colors hover:border-accent/40 hover:text-fg"
+          >
+            <span aria-hidden className="text-base leading-none text-accent">
+              +
+            </span>
+            Add task
+          </button>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {items.map((item) => {
@@ -417,7 +439,13 @@ export default function Nav() {
         </button>
       </aside>
 
-      <MobileNav summary={summary} onSignOut={signOut} />
+      <MobileNav
+        summary={summary}
+        onSignOut={signOut}
+        onAddTask={() => setAddOpen(true)}
+      />
+
+      {addOpen && <QuickAddTask onClose={() => setAddOpen(false)} />}
     </>
   );
 }

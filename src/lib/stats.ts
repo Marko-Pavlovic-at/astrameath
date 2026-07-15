@@ -13,16 +13,22 @@ export const STAT_ORDER: StatKind[] = [
   "social",
 ];
 
+// Categorical palette for the six stats. Redesigned in Stage 1.5 (task 7) to be
+// CVD-safe as a set — the old colors failed as a categorical palette (Phase 5).
+// Validated with the dataviz validator against the dark panel (#0c101b): all six
+// sit in L 0.48–0.67, clear 3:1 contrast, and adjacent pairs in STAT_ORDER clear
+// the CVD floor. The one floor-band pair (strength/vitality = red/green) is always
+// mitigated by the glyph + label that accompany every stat colour in the UI.
 export const STATS: Record<
   StatKind,
   { label: string; glyph: string; color: string }
 > = {
-  strength: { label: "Strength", glyph: "⚔", color: "#d4735f" },
-  vitality: { label: "Vitality", glyph: "❁", color: "#7fc79a" },
-  intelligence: { label: "Intelligence", glyph: "✦", color: "#7fa8e4" },
-  discipline: { label: "Discipline", glyph: "▣", color: "#a58fd4" },
-  creativity: { label: "Creativity", glyph: "✹", color: "#c9a86a" },
-  social: { label: "Social", glyph: "☍", color: "#d48fb8" },
+  strength: { label: "Strength", glyph: "⚔", color: "#e66767" },
+  vitality: { label: "Vitality", glyph: "❁", color: "#199e70" },
+  intelligence: { label: "Intelligence", glyph: "✦", color: "#3987e5" },
+  discipline: { label: "Discipline", glyph: "▣", color: "#d95926" },
+  creativity: { label: "Creativity", glyph: "✹", color: "#9085e9" },
+  social: { label: "Social", glyph: "☍", color: "#d55181" },
 };
 
 export const PRIORITY_ORDER: TaskPriority[] = [

@@ -73,6 +73,35 @@ export function useCreateTask(projectId: string) {
   });
 }
 
+/**
+ * Global quick-add — like useCreateTask but the project is a per-call argument,
+ * so one hook instance serves the app-wide add-task modal (which isn't scoped to
+ * a project page). Invalidates the target project's task list plus the calendar.
+ */
+export function useQuickAddTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      ...task
+    }: Omit<TablesInsert<"tasks">, "project_id"> & { projectId: string }) => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert({ ...task, project_id: projectId })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["undated-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar-tasks"] });
+    },
+  });
+}
+
 export function useUpdateTask(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({

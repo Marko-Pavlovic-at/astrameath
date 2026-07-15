@@ -49,8 +49,12 @@ export function applyDeltas(rel: Relationship, update: StateUpdate): Relationshi
 }
 
 /**
- * Absence decay (V1 rule): affection and trust fade with days away;
- * annoyance cools off too. Applied when loading state before a turn.
+ * Absence decay (V1 rule): affection and trust fade with days away; annoyance
+ * cools off too. Respect drifts down gently — it is the one axis the grind can
+ * push back up (see applyRespectGain), so a stretch away with no progress lets it
+ * slip, while training during that same stretch offsets or overtakes the drift.
+ * This is the SINGLE decay path — "slacking" is just an absence with no XP to show.
+ * Applied when loading state before a turn.
  */
 export function applyAbsenceDecay(
   rel: Relationship,
@@ -68,9 +72,29 @@ export function applyAbsenceDecay(
       ...rel,
       affection: clamp(rel.affection - Math.min(days, 15)),
       trust: clamp(rel.trust - Math.min(Math.floor(days / 2), 10)),
+      respect: clamp(rel.respect - Math.min(Math.floor(days / 3), 8)),
       annoyance: clamp(rel.annoyance - Math.min(days * 2, 30)),
     },
   };
+}
+
+/**
+ * XP earned since the last chat → respect. Deterministic and server-owned: the
+ * companion's regard is *earned by real progress*, not by how the user talks to
+ * it, and it cannot be farmed by chatting (chatting earns no XP). ~50 XP per
+ * point, capped per turn so a single big session can't spike it. The model never
+ * moves respect itself (its respect_delta is dropped) — it only narrates.
+ */
+export function respectGainFromXp(xpGained: number): number {
+  if (xpGained <= 0) return 0;
+  return Math.min(5, Math.floor(xpGained / 50));
+}
+
+export function applyRespectGain(
+  rel: Relationship,
+  xpGained: number
+): Relationship {
+  return { ...rel, respect: clamp(rel.respect + respectGainFromXp(xpGained)) };
 }
 
 /** Combine axes into an archetype label — derived, never stored. */
