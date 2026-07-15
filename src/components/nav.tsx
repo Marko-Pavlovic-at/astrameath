@@ -362,21 +362,10 @@ export default function Nav() {
     <>
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-56 flex-col border-r border-edge bg-panel md:flex">
-        <div className="px-5 pb-4 pt-6">
+        <div className="px-5 py-6">
           <span className="text-sm font-light uppercase tracking-[0.3em] text-accent">
             Astrameath
           </span>
-        </div>
-        <div className="px-3 pb-2">
-          <button
-            onClick={() => setAddOpen(true)}
-            className="flex w-full items-center gap-2 rounded border border-edge px-3 py-2 text-sm text-muted transition-colors hover:border-accent/40 hover:text-fg"
-          >
-            <span aria-hidden className="text-base leading-none text-accent">
-              +
-            </span>
-            Add task
-          </button>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {items.map((item) => {
@@ -444,6 +433,17 @@ export default function Nav() {
         onSignOut={signOut}
         onAddTask={() => setAddOpen(true)}
       />
+
+      {/* Desktop quick-add: a top-right corner affordance, deliberately outside
+          the nav. At ≥1200px it tucks just left of the 340px companion rail; below
+          that it hugs the viewport edge. Mobile has its own "+" in the top bar. */}
+      <button
+        onClick={() => setAddOpen(true)}
+        aria-label="Add task"
+        className="fixed right-4 top-4 z-40 hidden size-11 items-center justify-center rounded-full border border-edge bg-panel text-xl leading-none text-accent shadow-lg transition-colors hover:border-accent/50 md:inline-flex min-[1200px]:right-[356px]"
+      >
+        +
+      </button>
 
       {addOpen && <QuickAddTask onClose={() => setAddOpen(false)} />}
     </>

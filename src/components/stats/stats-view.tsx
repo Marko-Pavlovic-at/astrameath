@@ -7,12 +7,11 @@ import {
   parseDateStr,
   startOfMonth,
   startOfWeek,
-  toDateStr,
   todayStr,
 } from "@/lib/dates";
 import { useProjects } from "@/lib/queries/projects";
-import { useStatsSessions, useStatsXpEvents } from "@/lib/queries/stats";
-import { STAT_ORDER, STATS, type StatKind } from "@/lib/stats";
+import { useStatsSessions } from "@/lib/queries/stats";
+import { STATS } from "@/lib/stats";
 import { formatDuration } from "@/lib/time";
 import {
   activeDayStreaks,
@@ -50,9 +49,12 @@ function weekLabel(date: string): string {
   })}`;
 }
 
+function trendColor(pct: number) {
+  return pct > 0 ? "#199e70" : "#d95926";
+}
+
 export default function StatsView() {
   const { data: sessions } = useStatsSessions();
-  const { data: xpEvents } = useStatsXpEvents();
   const { data: projects } = useProjects();
   const [range, setRange] = useState<RangeKey>("month");
   const [picked, setPicked] = useState<DayTotal | null>(null);
@@ -60,7 +62,7 @@ export default function StatsView() {
   const today = todayStr();
 
   const derived = useMemo(() => {
-    if (!sessions || !projects || !xpEvents) return null;
+    if (!sessions || !projects) return null;
 
     const start =
       range === "week"
@@ -74,93 +76,83 @@ export default function StatsView() {
               : today;
 
     const projectById = new Map(projects.map((p) => [p.id, p]));
-    // sessions of archived/unknown projects fold into one null bucket
+    // archived/unknown projects collapse to the null bucket
+    const norm = (projectId: string | null) =>
+      projectId && projectById.has(projectId) ? projectId : null;
+
     const inRange = sessions
       .filter((s) => {
         const d = sessionDate(s);
         return d >= start && d <= today;
       })
-      .map((s) =>
-        s.projectId && projectById.has(s.projectId)
-          ? s
-          : { ...s, projectId: null }
-      );
+      .map((s) => ({ ...s, projectId: norm(s.projectId) }));
 
     const days = dayTotals(inRange, start, today);
     const weekly = days.length > WEEKLY_THRESHOLD_DAYS;
 
-    // Per-stat: tracked time (via the session's project stat) + XP earned, both
-    // scoped to the range. Zeroed so neglected stats still show up as empty.
-    const statSeconds = Object.fromEntries(
-      STAT_ORDER.map((s) => [s, 0])
-    ) as Record<StatKind, number>;
-    for (const s of inRange) {
-      const project = s.projectId ? projectById.get(s.projectId) : undefined;
-      if (project) statSeconds[project.stat] += sessionSeconds(s);
-    }
-    const statXp = Object.fromEntries(
-      STAT_ORDER.map((s) => [s, 0])
-    ) as Record<StatKind, number>;
-    for (const ev of xpEvents) {
-      const d = toDateStr(new Date(ev.createdAt));
-      if (d >= start && d <= today) statXp[ev.stat] += ev.amount;
+    // Streaks are a per-project property over ALL history, not the range.
+    const activeDatesByProject = new Map<string | null, Set<string>>();
+    for (const s of sessions) {
+      const pid = norm(s.projectId);
+      let set = activeDatesByProject.get(pid);
+      if (!set) {
+        set = new Set();
+        activeDatesByProject.set(pid, set);
+      }
+      set.add(sessionDate(s));
     }
 
-    // Trend vs. the immediately preceding equal-length window (not for "all").
+    // Previous equal-length window → trend, global and per project (not for "all").
     const span = days.length;
     const prevStart = addDays(start, -span);
     const prevEnd = addDays(start, -1);
-    const prevTotal =
-      range === "all"
-        ? null
-        : sessions
-            .filter((s) => {
-              const d = sessionDate(s);
-              return d >= prevStart && d <= prevEnd;
-            })
-            .reduce((acc, s) => acc + sessionSeconds(s), 0);
+    const prevByProject = new Map<string | null, number>();
+    let prevTotal = 0;
+    if (range !== "all") {
+      for (const s of sessions) {
+        const d = sessionDate(s);
+        if (d >= prevStart && d <= prevEnd) {
+          const pid = norm(s.projectId);
+          const sec = sessionSeconds(s);
+          prevByProject.set(pid, (prevByProject.get(pid) ?? 0) + sec);
+          prevTotal += sec;
+        }
+      }
+    }
 
-    // Active-day streaks over all history (a streak is global, not range-scoped).
-    const activeDates = new Set(sessions.map((s) => sessionDate(s)));
-    const streaks = activeDayStreaks(activeDates, today);
+    const byProject = projectTotals(inRange).map((row) => {
+      const streak = activeDayStreaks(
+        activeDatesByProject.get(row.projectId) ?? new Set(),
+        today
+      );
+      const prev = prevByProject.get(row.projectId) ?? 0;
+      const trendPct =
+        range !== "all" && prev > 0
+          ? Math.round(((row.seconds - prev) / prev) * 100)
+          : null;
+      return { ...row, streak, trendPct };
+    });
 
     return {
       projectById,
       days,
       weekly,
       buckets: weekly ? weeklyTotals(days) : days,
-      byProject: projectTotals(inRange),
-      statSeconds,
-      statXp,
-      prevTotal,
-      streaks,
+      byProject,
+      prevTotal: range === "all" ? null : prevTotal,
     };
-  }, [sessions, projects, xpEvents, range, today]);
+  }, [sessions, projects, range, today]);
 
   if (!derived) return <p className="text-sm text-muted">Loading…</p>;
-  const {
-    projectById,
-    days,
-    weekly,
-    buckets,
-    byProject,
-    statSeconds,
-    statXp,
-    prevTotal,
-    streaks,
-  } = derived;
+  const { projectById, days, weekly, buckets, byProject, prevTotal } = derived;
 
   const total = days.reduce((acc, d) => acc + d.seconds, 0);
   const daysElapsed = days.length;
   const activeDays = days.filter((d) => d.seconds > 0).length;
-  const best = days.reduce((a, b) => (b.seconds > a.seconds ? b : a), days[0]);
   const maxBucket = Math.max(...buckets.map((b) => b.seconds), 1);
   const maxProject = byProject[0]?.seconds ?? 0;
-  const maxStatSeconds = Math.max(...STAT_ORDER.map((s) => statSeconds[s]), 1);
   const bucketLabel = weekly ? weekLabel : dayLabel;
-
-  // Trend % vs. previous period (null when incomparable — no prior data / all-time).
-  const trendPct =
+  const globalTrend =
     prevTotal && prevTotal > 0
       ? Math.round(((total - prevTotal) / prevTotal) * 100)
       : null;
@@ -189,50 +181,125 @@ export default function StatsView() {
         </div>
       </div>
 
-      {/* headline numbers */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile
-          label="Tracked"
-          value={formatDuration(total)}
-          sub={`across ${daysElapsed} day${daysElapsed === 1 ? "" : "s"}`}
-          trendPct={trendPct}
-        />
-        <StatTile
-          label="Avg / day"
-          value={formatDuration(total / daysElapsed)}
-          sub={
-            activeDays > 0
-              ? `${formatDuration(total / activeDays)} per active day`
-              : "no active days yet"
-          }
-        />
-        <StatTile
-          label="Active days"
-          value={`${activeDays} / ${daysElapsed}`}
-          sub={`${Math.round((activeDays / daysElapsed) * 100)}% of days`}
-        />
-        <StatTile
-          label="Best day"
-          value={best.seconds > 0 ? formatDuration(best.seconds) : "—"}
-          sub={best.seconds > 0 ? dayLabel(best.date) : "nothing tracked yet"}
-        />
+      {/* slim global summary */}
+      <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded-lg border border-edge bg-panel px-4 py-3">
+        <span className="flex items-baseline gap-2">
+          <span className="text-xl">{formatDuration(total)}</span>
+          {globalTrend != null && globalTrend !== 0 && (
+            <span
+              className="text-xs"
+              style={{ color: trendColor(globalTrend) }}
+            >
+              {globalTrend > 0 ? "▲" : "▼"} {Math.abs(globalTrend)}%
+            </span>
+          )}
+          <span className="text-[11px] text-muted">tracked</span>
+        </span>
+        <span className="flex items-baseline gap-2">
+          <span className="text-xl">{formatDuration(total / daysElapsed)}</span>
+          <span className="text-[11px] text-muted">avg / day</span>
+        </span>
+        <span className="flex items-baseline gap-2">
+          <span className="text-xl">
+            {activeDays}
+            <span className="text-sm text-muted">/{daysElapsed}</span>
+          </span>
+          <span className="text-[11px] text-muted">active days</span>
+        </span>
       </div>
 
-      {/* consistency: active-day streaks (global, not range-scoped) */}
-      {streaks.longest > 0 && (
-        <p className="mt-3 flex flex-wrap items-center gap-x-2 text-xs text-muted">
-          <span aria-hidden>🔥</span>
-          <span className="text-fg">
-            {streaks.current} day{streaks.current === 1 ? "" : "s"}
-          </span>
-          current streak
-          <span className="text-edge">·</span>
-          <span className="text-fg">{streaks.longest}</span> longest
-        </p>
-      )}
+      {/* per-project — the focus of the page */}
+      <div className="mt-6">
+        <h2 className="text-xs uppercase tracking-widest text-muted">
+          Per project
+        </h2>
+        {byProject.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">
+            No time tracked in this range yet — start a timer on any task and the
+            stats fill in.
+          </p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {byProject.map((row) => {
+              const project = row.projectId
+                ? projectById.get(row.projectId)
+                : undefined;
+              const color = project
+                ? STATS[project.stat].color
+                : "var(--color-muted)";
+              return (
+                <li
+                  key={row.projectId ?? "archived"}
+                  className="rounded-lg border border-edge bg-panel p-3"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    {project ? (
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className="truncate text-sm hover:text-accent"
+                      >
+                        <span aria-hidden style={{ color }}>
+                          {STATS[project.stat].glyph}
+                        </span>{" "}
+                        {project.name}
+                      </Link>
+                    ) : (
+                      <span className="truncate text-sm text-muted">
+                        Archived projects
+                      </span>
+                    )}
+                    <span className="flex shrink-0 items-baseline gap-2 text-sm">
+                      {formatDuration(row.seconds)}
+                      {row.trendPct != null && row.trendPct !== 0 && (
+                        <span
+                          className="text-xs"
+                          style={{ color: trendColor(row.trendPct) }}
+                        >
+                          {row.trendPct > 0 ? "▲" : "▼"}
+                          {Math.abs(row.trendPct)}%
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded bg-panel-2">
+                    <div
+                      className="h-full rounded"
+                      style={{
+                        width: `${(row.seconds / maxProject) * 100}%`,
+                        background: color,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
+                    {row.streak.current > 0 ? (
+                      <span>
+                        <span aria-hidden>🔥</span>{" "}
+                        <span className="text-fg">{row.streak.current}d</span>{" "}
+                        streak
+                      </span>
+                    ) : (
+                      <span>no active streak</span>
+                    )}
+                    <span className="text-edge">·</span>
+                    <span>longest {row.streak.longest}d</span>
+                    <span className="text-edge">·</span>
+                    <span>
+                      {Math.round((row.seconds / total) * 100)}% of range
+                    </span>
+                    <span className="text-edge">·</span>
+                    <span>
+                      active {row.activeDays}/{daysElapsed}
+                    </span>
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
-      {/* activity over time */}
-      <div className="mt-6 rounded-lg border border-edge bg-panel p-4">
+      {/* when the time went in — supporting detail */}
+      <div className="mt-8 rounded-lg border border-edge bg-panel p-4">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-xs uppercase tracking-widest text-muted">
             {weekly ? "Time per week" : "Time per day"}
@@ -282,151 +349,6 @@ export default function StatsView() {
           </span>
         </div>
       </div>
-
-      {/* per-stat breakdown — where the character is being levelled vs neglected */}
-      <div className="mt-8">
-        <h2 className="text-xs uppercase tracking-widest text-muted">
-          Per stat
-        </h2>
-        <p className="mt-1 text-[11px] text-muted">
-          Time tracked and XP earned per RPG stat in this range.
-        </p>
-        <ul className="mt-2 space-y-2">
-          {STAT_ORDER.map((s) => {
-            const secs = statSeconds[s];
-            const xp = statXp[s];
-            return (
-              <li
-                key={s}
-                className="rounded-lg border border-edge bg-panel p-3"
-              >
-                <div className="flex items-baseline justify-between gap-3 text-sm">
-                  <span style={{ color: STATS[s].color }}>
-                    <span aria-hidden>{STATS[s].glyph}</span> {STATS[s].label}
-                  </span>
-                  <span className="shrink-0 tabular-nums text-muted">
-                    <span className="text-fg">{formatDuration(secs)}</span>
-                    {" · "}
-                    <span className="text-fg">{xp.toLocaleString()}</span> XP
-                  </span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded bg-panel-2">
-                  <div
-                    className="h-full rounded"
-                    style={{
-                      width: `${(secs / maxStatSeconds) * 100}%`,
-                      background: STATS[s].color,
-                    }}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      {/* per-project distribution */}
-      <div className="mt-8">
-        <h2 className="text-xs uppercase tracking-widest text-muted">
-          Distribution
-        </h2>
-        {byProject.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">
-            No time tracked in this range yet — start a timer on any task and
-            the stats fill in.
-          </p>
-        ) : (
-          <ul className="mt-2 space-y-2">
-            {byProject.map((row) => {
-              const project = row.projectId
-                ? projectById.get(row.projectId)
-                : undefined;
-              return (
-                <li
-                  key={row.projectId ?? "archived"}
-                  className="rounded-lg border border-edge bg-panel p-3"
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    {project ? (
-                      <Link
-                        href={`/projects/${project.id}`}
-                        className="truncate text-sm hover:text-accent"
-                      >
-                        <span
-                          aria-hidden
-                          style={{ color: STATS[project.stat].color }}
-                        >
-                          {STATS[project.stat].glyph}
-                        </span>{" "}
-                        {project.name}
-                      </Link>
-                    ) : (
-                      <span className="truncate text-sm text-muted">
-                        Archived projects
-                      </span>
-                    )}
-                    <span className="shrink-0 text-sm">
-                      {formatDuration(row.seconds)}
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded bg-panel-2">
-                    <div
-                      className="h-full rounded"
-                      style={{
-                        width: `${(row.seconds / maxProject) * 100}%`,
-                        background: project
-                          ? STATS[project.stat].color
-                          : "var(--color-muted)",
-                      }}
-                    />
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-muted">
-                    {Math.round((row.seconds / total) * 100)}% of tracked ·
-                    active {row.activeDays} of {daysElapsed} days ·{" "}
-                    {formatDuration(row.seconds / row.activeDays)} per active
-                    day
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
     </section>
-  );
-}
-
-function StatTile({
-  label,
-  value,
-  sub,
-  trendPct,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  trendPct?: number | null;
-}) {
-  return (
-    <div className="rounded-lg border border-edge bg-panel p-4">
-      <p className="text-[10px] uppercase tracking-widest text-muted">
-        {label}
-      </p>
-      <p className="mt-1 flex items-baseline gap-2 text-xl">
-        {value}
-        {trendPct != null && trendPct !== 0 && (
-          <span
-            className="text-xs"
-            style={{ color: trendPct > 0 ? "#199e70" : "#d95926" }}
-          >
-            {trendPct > 0 ? "▲" : "▼"} {Math.abs(trendPct)}%
-          </span>
-        )}
-      </p>
-      <p className="mt-0.5 text-[11px] text-muted">
-        {sub}
-        {trendPct != null && <span className="text-muted"> · vs. prev</span>}
-      </p>
-    </div>
   );
 }

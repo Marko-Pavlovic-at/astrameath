@@ -228,6 +228,8 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
         </div>
       )}
 
+      <ProjectTimePanel projectId={projectId} />
+
       <GoalsSection projectId={projectId} />
 
       {/* narrow: title on its own line, controls in a row under it (sm:contents
@@ -326,8 +328,6 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
             : "No tasks yet — add the first one above."}
         </p>
       )}
-
-      <ProjectTimePanel projectId={projectId} />
     </section>
   );
 }

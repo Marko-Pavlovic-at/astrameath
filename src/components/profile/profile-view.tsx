@@ -62,73 +62,70 @@ export default function ProfileView() {
 
   return (
     <section className="mx-auto max-w-3xl">
-      {/* identity */}
-      <div className="flex flex-wrap items-baseline gap-x-3">
-        {editingName ? (
-          <form onSubmit={saveName} className="flex items-center gap-2">
-            <input
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={saveName}
-              className="rounded border border-edge bg-panel-2 px-3 py-1.5 text-fg outline-none focus:border-accent"
-              aria-label="Display name"
-            />
-          </form>
-        ) : (
-          <button
-            onClick={() => {
-              setName(profile.display_name ?? "");
-              setEditingName(true);
-            }}
-            className="inline-flex min-h-11 items-center text-xl hover:text-accent sm:min-h-0"
-            title="Edit name"
-          >
-            {profile.display_name ?? "Unnamed"}
-          </button>
-        )}
-        {activeTitle && (
-          <span className="text-sm text-gold">
-            {activeTitle.glyph} {activeTitle.label}
-          </span>
-        )}
-      </div>
-
-      {/* general level */}
-      <div className="mt-4 flex items-center gap-5 rounded-lg border border-edge bg-panel p-5">
-        <div className="flex size-20 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50 bg-panel-2">
-          <span className="text-[10px] uppercase tracking-widest text-muted">
-            Level
-          </span>
-          <span className="text-2xl text-accent">{level}</span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm">
-            {totalXp.toLocaleString()} XP across all stats
-          </p>
-          <div className="mt-2 h-1.5 overflow-hidden rounded bg-panel-2">
-            <div
-              className="h-full rounded bg-accent transition-[width]"
-              style={{
-                width: `${Math.round((next.intoLevel / next.toNext) * 100)}%`,
-              }}
-            />
-          </div>
-          <p className="mt-1.5 text-xs">
-            Level {level + 1} in{" "}
-            <span className="text-accent">{next.remaining} XP</span> — closest
-            path via{" "}
-            <span style={{ color: STATS[next.stat].color }}>
-              {STATS[next.stat].glyph} {STATS[next.stat].label}
+      {/* character sheet: identity, level and person fused into one card */}
+      <div className="rounded-lg border border-edge bg-panel p-5">
+        <div className="flex items-center gap-4 sm:gap-5">
+          <div className="flex size-16 shrink-0 flex-col items-center justify-center rounded-full border-2 border-accent/50 bg-panel-2 sm:size-20">
+            <span className="text-[9px] uppercase tracking-widest text-muted sm:text-[10px]">
+              Lv
             </span>
-          </p>
-          <p className="mt-1 text-xs text-muted">
-            Every stat level gained raises the general level by one. Earn XP by
-            tracking time ({XP_RATES.perMinute}/min), completing tasks (+
-            {XP_RATES.taskCompletion}), milestones (+{XP_RATES.milestone}) and
-            goals (+{XP_RATES.goal}).
-          </p>
+            <span className="text-2xl leading-none text-accent">{level}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline gap-x-3">
+              {editingName ? (
+                <form onSubmit={saveName} className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={saveName}
+                    className="rounded border border-edge bg-panel-2 px-3 py-1.5 text-fg outline-none focus:border-accent"
+                    aria-label="Display name"
+                  />
+                </form>
+              ) : (
+                <button
+                  onClick={() => {
+                    setName(profile.display_name ?? "");
+                    setEditingName(true);
+                  }}
+                  className="inline-flex min-h-11 items-center text-xl hover:text-accent sm:min-h-0"
+                  title="Edit name"
+                >
+                  {profile.display_name ?? "Unnamed"}
+                </button>
+              )}
+              {activeTitle && (
+                <span className="text-sm text-gold">
+                  {activeTitle.glyph} {activeTitle.label}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-muted">
+              {totalXp.toLocaleString()} XP
+            </p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded bg-panel-2">
+              <div
+                className="h-full rounded bg-accent transition-[width]"
+                style={{
+                  width: `${Math.round((next.intoLevel / next.toNext) * 100)}%`,
+                }}
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-muted">
+              Level {level + 1} in{" "}
+              <span className="text-accent">{next.remaining} XP</span> — via{" "}
+              <span style={{ color: STATS[next.stat].color }}>
+                {STATS[next.stat].glyph} {STATS[next.stat].label}
+              </span>
+            </p>
+          </div>
         </div>
+
+        <div className="my-4 border-t border-edge" />
+
+        <AboutYou />
       </div>
 
       {/* stat levels */}
@@ -158,6 +155,13 @@ export default function ProfileView() {
           );
         })}
       </div>
+
+      <p className="mt-2 text-[11px] text-muted">
+        Every stat level gained raises the general level by one. Earn XP by
+        tracking time ({XP_RATES.perMinute}/min), completing tasks (+
+        {XP_RATES.taskCompletion}), milestones (+{XP_RATES.milestone}) and goals
+        (+{XP_RATES.goal}).
+      </p>
 
       {/* rewards */}
       {(["title", "item", "theme"] as RewardKind[]).map((kind) => (
@@ -229,8 +233,6 @@ export default function ProfileView() {
           </ul>
         </div>
       ))}
-
-      <AboutYou />
 
       <DangerZone />
     </section>
