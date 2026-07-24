@@ -29,6 +29,11 @@ npm run lint               # ESLint
 vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
 ```
 
+No automated test suite (no test runner in `package.json`). Verification is
+manual, end-to-end in a real browser — recipe and gotchas in
+`.claude/memory/browser_verification_setup.md`. Run `npm run build` before every
+commit; a green build is the baseline gate.
+
 ## Infra
 
 - **Supabase project `astrameath`** — ref `wmnqmssdrwtseovjozxm` (eu-west-1).
@@ -59,90 +64,69 @@ vercel deploy --prod --yes # deploy → https://astrameath.vercel.app
 - **Time tracking:** a running timer IS a `time_sessions` row with `ended_at null`
   (partial unique index → max one per user). Totals come from SQL views
   `task_time_totals` / `project_time_totals` (finished sessions only; the live
-  session is rendered by `src/components/timer-bar.tsx`). Sessions >12h are
-  discarded on stop.
+  session's clock is rendered in `src/components/nav.tsx`, ticking once a second).
+  Sessions >12h are discarded on stop.
 - **Derive, don't persist** (hard rule from V1): levels, streaks, totals, archetypes
   are always computed at read time. XP is stored only as raw `xp_events` rows.
 - Inputs stay ≥16px font below 900px (iOS zoom guard, see globals.css).
 
-## Status (2026-07-03)
+## Live status — read these, don't trust a date here
 
-- Phase 1 (foundation: schema, auth, shell, deploy) — done, verified.
-- Phase 2 (projects, tasks, timer, time tracking) — done, verified by Marko.
-- Phase 3 (recurrence + calendar) — done, verified end-to-end in browser,
-  reviewed by Marko (incl. drag-and-drop on real mouse). Follow-ups shipped:
-  calendar view/date in URL search params (browser back retraces month→day),
-  ← Month button, start/stop timer on day-view rows.
-  Recurrence lives in `src/lib/recurrence.ts` (daily / weekly-days / monthly-day,
-  anchored at scheduled_date or creation date; occurrences derived, never stored).
-  Calendar month/week/day in `src/components/calendar/`; undated sidebar with
-  HTML5 drag-and-drop + date-input fallback. Local dates via `src/lib/dates.ts`
-  ("YYYY-MM-DD" strings, never toISOString). Recurring task checkboxes toggle
+Phase/task state goes stale in a doc. The current source of truth is, in order:
+`docs/plans/mvp-to-launch.md` (the roadmap: Stage 1.5 → Phase 7 → go-public),
+`.claude/memory/` (what's built/committed/awaiting-test right now), and `git log`.
+Check them before assuming any feature is or isn't done. Phases 1–6 (foundation,
+projects+timer, recurrence+calendar, gamification, stats, AI companions) shipped
+and deployed; Stage 1.5 and Phase 7 are the active fronts.
+
+Two product decisions are **settled**: imported time awards **no XP**, and the
+companion bond link runs **XP → affection/respect, never the reverse** (no
+chat-farming).
+
+## Subsystems (how each one works — evergreen)
+
+- **Recurrence + calendar** (`src/lib/recurrence.ts`, `src/components/calendar/`):
+  daily / weekly-days / monthly-day, anchored at `scheduled_date` or creation date;
+  occurrences are **derived, never stored**. Undated sidebar uses HTML5
+  drag-and-drop + a date-input fallback. Calendar view/date live in URL search
+  params (browser back retraces month→day). Local dates via `src/lib/dates.ts`
+  ("YYYY-MM-DD" strings, **never** `toISOString`). Recurring checkboxes toggle
   `task_completions` for today (optimistic).
-- Phase 4 (gamification) — done, verified end-to-end in browser. XP is awarded
-  and revoked by **DB triggers** (`supabase/migrations/20260703_xp_triggers.sql`):
-  1 XP/min tracked, 10 task completion (one-off or per-day), 25 milestone,
-  50 goal; every award carries ref_id so un-doing revokes exactly. `xp_totals`
-  view aggregates; hard-deleting a project revokes its XP, archiving keeps it.
-  Levels derive in `src/lib/xp.ts` (level-up cost 100 + 50/level; general level
-  = Σ stat levels − 5). Reward catalog in `src/lib/rewards.ts` (titles/items/
-  themes by general level; `unlocks` table intentionally unused for now — all
-  rewards are level-derived). Profile page: name edit, active title, stat cards,
-  reward grids; themes swap `--accent` via `<html data-theme>` (ThemeApplier in
-  the app layout, palette overrides in globals.css). Goals + milestones UI in
-  project detail (`goals-section.tsx`).
-- Phase 5 (stats page) — done, verified end-to-end in browser (desktop +
-  375px, all ranges, hover readout). A range filter (this week / this month /
-  last 30 days / all time) scopes everything: KPI tiles (tracked, avg/day +
-  per-active-day, active days, best day), a per-day column chart (falls back
-  to weekly buckets past 42 days; hover/focus sets a readout line — no
-  floating tooltips to clip), and per-project distribution rows with share %,
-  active-day frequency and avg per active day (sessions of archived projects
-  fold into one muted row). Data: `["stats-sessions"]` fetches all finished
-  sessions once (client-side aggregation in `src/lib/time-stats.ts`, pure
-  functions; a session is attributed to its local start date); the key is in
-  sessions.ts TIME_KEYS so timer mutations refresh it. Charts are single-hue
-  (accent) by design — the six stat colors fail CVD checks as a categorical
-  palette; identity lives in row labels + stat glyphs. **Superseded 2026-07-14:**
-  Marko wants per-category color, so the six stat colors get redesigned into a
-  CVD-safe categorical palette (Stage 1.5 task 7) — the constraint stands, the
-  single-hue answer doesn't.
-- Phase 6 (AI companions) — done, verified end-to-end in browser against the
-  real Claude API (create with avatar upload → chat → state deltas → memory
-  compression → recall → both resets). Architecture carried from V1: one
-  streamed Haiku inference per turn (`/api/ai/chat`, Node route handler,
-  cookie-auth via the Supabase server client) — in-character text + an
-  `update_state` tool call in the same response. GOTCHA (V1 lesson, kept):
-  `tool_choice` must stay `auto`; forcing `{type:"tool"}` makes Anthropic skip
-  the text reply. System prompt = cached stable prefix (persona) + dynamic
-  tail (temporal, relationship-as-language, mood, app snapshot, recent
-  events, memories); snapshot is built **server-side** from the DB
-  (`src/lib/ai/snapshot.ts`), client only sends tzOffsetMinutes. Personas are
-  user-authored joyland-style templates (tagline/personality/greeting/
-  scenario/example dialogs, `{{char}}`/`{{user}}` placeholders) in
-  `companions.persona`. Relationship axes: affection/trust/respect/amusement/
-  annoyance, 0–100, archetype derived; absence decay on load. Chat memory =
-  `companion_messages` rows; past ~80 messages the client fires
-  `/api/ai/memorize`, which compresses the oldest chunk into
-  `companion_memories` (structured output) and **deletes** those rows. Costs:
-  `ai_usage` row per call; UI shows session/companion/lifetime USD in the
-  chat "Bond" panel. Reset buttons (app data / AI data) live on Profile.
-  Lib in `src/lib/ai/` (persona, state, prompt, tools, pricing, snapshot —
-  all pure except snapshot), UI in `src/components/companions/`.
-  NOTE: `ANTHROPIC_API_KEY` is set on all three Vercel envs + `.env.local`
-  (V1's Vercel copy is `sensitive`-type and unreadable; the working key came
-  from V1's local `.env.local`). Verify a pulled env value is non-empty —
-  `vercel env pull` writes empty values for sensitive vars without erroring.
-- **Stage 1.5 next (captured 2026-07-14, nothing started)** — second MVP round,
-  ordered in `docs/plans/mvp-to-launch.md`: (1) mobile bottom bar → hamburger top
-  bar [likely kills the open bottom-bar flicker bug — don't debug that separately],
-  (2) global "add task" on every tab, (3) subtasks to the top of the expanded task
-  panel, (4) time logged/edited **on the project** (`time_sessions.task_id` goes
-  nullable + `project_id`) plus import of old-app hours, (5) optional personal
-  profile data (age/height/weight/bio) fed to the AI snapshot, (6) companions'
-  affection/respect bound to XP, (7) stats color-coded per stat + deeper insight.
-  Two decisions are settled: **imported time awards no XP**, and the bond link runs
-  **XP → affection/respect, never the reverse** (no chat-farming).
-- Phase 7 after that: game-UI polish (theming pass, animations, PWA install).
-  Then go-public (Stripe, AI quotas, open signup, VPS, legal). Post-MVP:
-  community, module system. Details in the plan + roadmap docs.
+- **Gamification / XP** — awarded and revoked by **DB triggers**
+  (`supabase/migrations/20260703_xp_triggers.sql`): 1 XP/min tracked, 10 task
+  completion (one-off or per-day), 25 milestone, 50 goal. Every award carries a
+  `ref_id` so un-doing revokes exactly; hard-deleting a project revokes its XP,
+  archiving keeps it. `xp_totals` view aggregates. Levels derive in `src/lib/xp.ts`
+  (level-up cost 100 + 50/level; general level = Σ stat levels − 5). Reward catalog
+  in `src/lib/rewards.ts` (titles/items/themes by general level; the `unlocks`
+  table is intentionally unused — all rewards are level-derived). Themes swap
+  `--accent` via `<html data-theme>` (ThemeApplier in the app layout, palette
+  overrides in globals.css).
+- **Stats** (`src/components/stats/stats-view.tsx`, `src/lib/time-stats.ts`):
+  `["stats-sessions"]` fetches all finished sessions **once**, then pure client-side
+  aggregation; a session is attributed to its **local start date**. The key lives
+  in `sessions.ts` `TIME_KEYS` so timer mutations refresh it. A range filter scopes
+  everything; the per-day column chart falls back to weekly buckets past 42 days;
+  hover/focus sets a readout line (no floating tooltips, to avoid clipping).
+  DESIGN CONSTRAINT: the six stat colors fail CVD checks as a categorical palette —
+  any per-stat coloring must use a CVD-safe redesigned palette (Stage 1.5 work),
+  not the raw stat hues.
+- **AI companions** (`src/lib/ai/`, `src/components/companions/`,
+  `/api/ai/chat` + `/api/ai/memorize`, Node route handlers, cookie-auth via the
+  Supabase server client): one **streamed Haiku** inference per turn returns
+  in-character text **and** an `update_state` tool call in the same response.
+  GOTCHA (V1 lesson): `tool_choice` must stay `auto` — forcing `{type:"tool"}`
+  makes Anthropic skip the text reply. System prompt = cached stable prefix
+  (persona) + dynamic tail (temporal, relationship-as-language, mood, app snapshot,
+  recent events, memories); the snapshot is built **server-side** from the DB
+  (`src/lib/ai/snapshot.ts` — the only impure file in `src/lib/ai/`), the client
+  only sends `tzOffsetMinutes`. Personas are user-authored joyland-style templates
+  (`{{char}}`/`{{user}}` placeholders) in `companions.persona`. Relationship axes:
+  affection/trust/respect/amusement/annoyance (0–100, archetype derived, absence
+  decay on load). Chat memory = `companion_messages` rows; past ~80 messages the
+  client fires `/api/ai/memorize`, which compresses the oldest chunk into
+  `companion_memories` (structured output) and **deletes** those rows. Cost is
+  logged per call in `ai_usage` (session/companion/lifetime USD shown in the chat
+  "Bond" panel). ENV: `ANTHROPIC_API_KEY` is set on all three Vercel envs +
+  `.env.local`; verify a pulled value is non-empty — `vercel env pull` writes empty
+  values for `sensitive`-type vars without erroring.
